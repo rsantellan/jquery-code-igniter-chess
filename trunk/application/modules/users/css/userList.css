@@ -1,0 +1,21 @@
+/* 
+    Document   : userList
+    Created on : Dec 22, 2011, 3:46:53 PM
+    Author     : Rodrigo Santellan
+    Description:
+        Purpose of the stylesheet follows.
+*/
+
+/* 
+   TODO customize this sample style
+   Syntax recommendation http://www.w3.org/TR/REC-CSS2/
+*/
+
+.ui-autocomplete {
+  max-height: 100px;
+  overflow-y: auto;
+  /* prevent horizontal scrollbar */
+  overflow-x: hidden;
+  /* add padding to account for vertical scrollbar */
+  padding-right: 20px;
+}
