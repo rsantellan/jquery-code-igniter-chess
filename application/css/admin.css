@@ -1,0 +1,71 @@
+@import url("general.css");
+@import url("dashboard.css");
+@import url("tables.css");
+@import url("pagination.css");
+@import url("forms.css");
+
+
+
+
+
+
+/** 
+
+Propios
+**/
+
+.ajax_system_messages
+{
+  display:none;
+}
+
+.centered
+{
+  text-align: center;
+}
+
+/**********************************************************/
+/***************************LOADING************************/
+/**********************************************************/
+.upload_container {
+  background-color:#000000;
+  height:100%;
+  opacity:0.3;
+  filter: alpha(opacity=30);
+  position:absolute;
+  text-align:left;
+  top:0;
+  width:100%;
+  z-index:100100;
+}
+.upload_progress {
+  border:3px solid gray;
+  height:100px;
+  left:50%;
+  margin-left:-150px;
+  margin-top:-50px;
+  overflow:auto;
+  position:absolute;
+  top:50%;
+  width:300px;
+  z-index:100101;
+  background-color: #000000;
+  opacity: 0.8;
+  filter: alpha(opacity=80);
+  padding: 5px;
+  text-align: center;
+}
+div.upload_progress img{
+  margin-top: 25px;
+}
+
+
+div.progressWindow
+{
+  color: white;
+}
+
+
+
+
+

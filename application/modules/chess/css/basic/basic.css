@@ -1,0 +1,98 @@
+/* 
+    Document   : basic
+    Created on : Dec 29, 2011, 12:25:02 PM
+    Author     : rodrigo
+    Description:
+        Purpose of the stylesheet follows.
+*/
+
+.black_bishop
+{
+  width: 50px;
+  height: 50px;
+  background-image: url('images/black_bishop') !important;
+}
+
+.white_bishop
+{
+  width: 50px;
+  height: 50px;
+  background-image: url('images/white_bishop.png') !important;
+}
+
+.black_king
+{
+  width: 50px;
+  height: 50px;
+  background-image: url('images/black_king') !important;
+}
+
+.black_knight
+{
+  width: 50px;
+  height: 50px;
+  background-image: url('images/black_knight') !important;
+}
+
+.black_pawn
+{
+  width: 50px;
+  height: 50px;
+  background-image: url('images/black_pawn') !important;
+}
+
+.black_queen
+{
+  width: 50px;
+  height: 50px;
+  background-image: url('images/black_queen') !important;
+}
+
+.black_rook
+{
+  width: 50px;
+  height: 50px;
+  background-image: url('images/black_rook') !important;
+}
+
+.black_rook
+{
+  width: 50px;
+  height: 50px;
+  background-image: url('images/black_rook') !important;
+}
+
+.white_king
+{
+  width: 50px;
+  height: 50px;
+  background-image: url('images/white_king') !important;
+}
+
+.white_knight
+{
+  width: 50px;
+  height: 50px;
+  background-image: url('images/white_knight') !important;
+}
+
+.white_pawn
+{
+  width: 50px;
+  height: 50px;
+  background-image: url('images/white_pawn') !important;
+}
+
+.white_queen
+{
+  width: 50px;
+  height: 50px;
+  background-image: url('images/white_queen') !important;
+}
+
+.white_rook
+{
+  width: 50px;
+  height: 50px;
+  background-image: url('images/white_rook') !important;
+}
