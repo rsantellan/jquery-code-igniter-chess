@@ -690,6 +690,7 @@ function GamePiece()
 		switch(board[fromRow][fromCol] & COLOR_MASK)
 		{
 			case PAWN:
+        
 				isValid = isValidMovePawn(fromRow, fromCol, toRow, toCol, tmpDir, epCol);
 				break;
 			case KNIGHT:
