@@ -10,7 +10,8 @@ $rankLabel = $rank;
 $files = array('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h');
 ?>
 
-<table id="theBoard" cellpadding="0" style="border:1px solid #888; padding:0; border-collapse: collapse;border-spacing:0; margin-bottom:5px;">
+<div class="clear"></div>
+<table id="theBoard" cellpadding="0" style="float: left; border:1px solid #888; padding:0; border-collapse: collapse;border-spacing:0; margin-bottom:5px;">
   <tr id="bordertop" style="height: <?php echo $borderWidth;?>px;"><td colspan="10" class="list_textos <?php echo $classHeader;?>">&nbsp;</td></tr>
   <tr><td id="rank<?php echo $rank--;?>" class="list_textos <?php echo $classHeader;?>" width="<?php echo $borderWidth;?>"><?php echo $rankLabel;?></td>
   
@@ -105,7 +106,7 @@ endfor;
   
 </div>
 
-<div>
+<div class="history_table">
   <div class="history">
 	<?php
 	  $moves = 1;
@@ -165,4 +166,18 @@ endfor;
 
   var history_js = <?php echo json_encode($history_js); ?>;
   
+  var board_js = <?php echo json_encode($board_js); ?>;
+  
+  var PAWN = "<?php echo PAWN;?>";
+  var KNIGHT = "<?php echo KNIGHT?>";
+  var BISHOP = "<?php echo BISHOP?>";
+  var ROOK = "<?php echo ROOK?>";
+  var QUEEN = "<?php echo QUEEN?>";
+  var KING = "<?php echo KING?>";
+  var BLACK = "<?php echo BLACK?>";
+  var WHITE = "<?php echo WHITE?>";
+  
 </script>
+
+
+<div class="clear"></div>

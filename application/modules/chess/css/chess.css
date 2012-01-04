@@ -86,3 +86,13 @@ img	{
   width: 50px;
   height: 50px;
 }
+
+.clear
+{
+  clear: both;
+}
+
+.history_table
+{
+  margin-left: 25px;
+}

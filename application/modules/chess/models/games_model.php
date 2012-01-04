@@ -31,8 +31,20 @@ class games_model extends CI_Model{
   {
 	$query = $this->db->get('games');
 	if($query->num_rows()>0){
-	  // return result set as an associative array
-	  return $query->result_array();
+	  $salida = array();
+	  foreach($query->result() as $aux)
+	  {
+		$game = new games_model();
+		$game->setBlackPlayer($aux->blackPlayer);
+		$game->setGameId($aux->gameID);
+		$game->setGameMessage($aux->gameMessage);
+		$game->setMessageFrom($aux->messageFrom);
+		$game->setWhitePlayer($aux->whitePlayer);
+		$game->loadGameOver();
+		$salida[] = $game;
+	  }
+	  return $salida;
+	  //return $query->result_array();
 	}
 	return array();
   }

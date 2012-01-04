@@ -24,8 +24,11 @@ class chess extends MY_Controller {
 	
 	$this->load->model("chess/games_model");
 	
+	$this->load->model("chess/players_model");
+	
 	$this->data['games'] = $this->games_model->retrieveAllGames();
 	
+	$this->data['players'] = $this->players_model->retrieveAllPlayers();
 	$this->data["content"] = 'index';
 	
 	$this->load->view('layout', $this->data);
@@ -75,12 +78,36 @@ class chess extends MY_Controller {
 	$this->addModuleJavascript("chess", "chessDragAndDrop.js");
 	$this->addModuleStyleSheet("chess", "basic/basic.css");
 	
+  $this->addJavascript("myJqueryUIDrag.js");
+  
 	$this->addModuleStyleSheet("chess", "jquery.tablescroll.css");
 	$this->addModuleJavascript("chess", "jquery.tablescroll.js");
 	$this->data["content"] = 'show';
 	
 	$this->load->view('layout', $this->data);
   }
+ 
   
+  public function ratings()
+  {
+	
+	$this->output->enable_profiler(TRUE);
+	
+	$this->load->model("chess/games_model");
+	
+	$this->load->model("chess/players_ratings_model");
+	
+	$this->load->model("chess/players_model");
+	
+	$games = $this->games_model->retrieveAllGames();
+	
+	$this->data["players_ratings"] = $this->players_ratings_model->reloadAllRatings($games);
+	
+	
+	$this->data["players"] =$this->players_model->retrieveAllPlayers();
+	
+	$this->data["content"] = 'ratings';
+	$this->load->view('layout', $this->data);
+  }
 }
 
