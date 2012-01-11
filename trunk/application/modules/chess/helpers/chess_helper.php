@@ -82,7 +82,7 @@ if ( ! function_exists('getHistoryMove'))
   function getHistoryMove($history)
   {
 	$files = array('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h');
-	
+	$piece = $history["curPiece"];
 	$row_from = $history["fromRow"];
 	$row_from = ((int)$row_from) + 1;
 	$col_from = $history["fromCol"];
@@ -92,21 +92,31 @@ if ( ! function_exists('getHistoryMove'))
 	$row_to = ((int)$row_to) + 1;
 	$col_to = $history["toCol"];
 	$col_to = $files[$col_to];
-	$return = $col_from.$row_from;
-	if(!is_null($history["replaced"]))
+	$return = "";
+	
+	
+	if (($piece == "king") && (abs($history["toCol"] - $history["fromCol"]) == 2))
 	{
-	  $return .= " x ";
+	  $return .= "0 - 0 - 0";
 	}
 	else
 	{
-	  $return .= " - ";
-	}
-	
-	$return .= $col_to.$row_to;
-	
-	if($history["isInCheck"] == "1")
-	{
-	  $return .= " +";
+	  $return .= $col_from.$row_from;
+	  if(!is_null($history["replaced"]))
+	  {
+		$return .= " x ";
+	  }
+	  else
+	  {
+		$return .= " - ";
+	  }
+
+	  $return .= $col_to.$row_to;
+
+	  if($history["isInCheck"] == "1")
+	  {
+		$return .= " +";
+	  }
 	}
 	return $return;
   }

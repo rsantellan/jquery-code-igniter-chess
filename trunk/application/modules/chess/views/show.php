@@ -8,6 +8,7 @@ $borderWidth = $squareSize / 2;
 $rank = 8;
 $rankLabel = $rank;
 $files = array('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h');
+var_dump($isWhite);
 ?>
 
 <div class="clear"></div>
@@ -21,15 +22,28 @@ $row = 0;
 $col = 0;
 $j = 1;
 $i = 0;
+
 for($k = 63; $k >= 0; $k--):
 
   if(($k+1) % 8 == 0)
   {
-	$i = $k - 7;
+    $i = $k - 7;
+    if(!$isWhite)
+    {
+      $i = 63 - $i;
+    }
+    
   }
   else
   {
-	$i++;
+    if($isWhite)
+    {
+      $i++;
+    }
+    else
+    {
+      $i--;
+    }
   }
 ?>
 	<td id="tsq<?php echo $i;?>" class="list_textos <?php echo $sqBackground[$j];?>" width="<?php echo $squareSize;?>" height="<?php echo $squareSize;?>">
@@ -135,7 +149,7 @@ endfor;
 	  <?php $row_counts++;?>
 	  <?php  endif;?>
 	  <td id="movement_<?php echo $index;?>" movement="<?php echo $index;?>" class="moveToPosition">
-	  <?php //var_dump($aux);?>
+		<?php //var_dump($aux);?>
 		<?php echo getHistoryMove($aux);?>
       </td>
 

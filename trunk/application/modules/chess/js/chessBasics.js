@@ -10,10 +10,7 @@ var knightMove = [[-1, -2], [+1, -2], [-2, -1], [-2, +1], [-1, +2], [+1, +2], [+
 
 function calculatePosition(col, row)
 {
-  console.log(col);
-  console.log(row);
   var position = parseInt(col) + parseInt(row * 8);
-  console.log(position);
   return position;
 }
 

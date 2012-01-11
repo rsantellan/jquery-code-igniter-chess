@@ -115,6 +115,7 @@ class players_ratings_model extends CI_Model{
 		  default:
 			break;
 		}
+    //var_dump($elo);
 		$players_ratings[$white] = $rWhite;
 		$players_ratings[$black] = $rBlack;
 	  }
