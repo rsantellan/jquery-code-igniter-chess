@@ -1,8 +1,3 @@
-
-
-
-
-
 function isValidMove(fromRow, fromCol, toRow, toCol, epCol)
 {
   if(!isValidNoPinMove(fromRow, fromCol, toRow, toCol, epCol))
@@ -796,4 +791,195 @@ function isSafe(testRow, testCol, testColor)
     alert("isSafe is true");
 
   return true;
+}
+
+function locateKingInBoard(used_board, used_color)
+{
+  console.log(used_board[0]);
+  var found = false;
+  var i = 0;
+  var j = 0;
+  var king_value = KING + used_color;
+  var col = 0;
+  var row = 0;
+  while(!found)
+  {
+	j = 0;
+	while(j < 8 && !found)
+	{
+	  console.log(i);
+	  if(used_board[i][j] == king_value)
+	  {
+		col = j;
+		row = i;
+		found = true;
+	  }
+	  j = j+1;
+	}
+	i = i + 1;
+  }
+  console.log(j);
+  console.log(i);
+}
+
+
+/**
+ *
+ * Chequeo por el caballero
+ *
+ **/
+function validateIfKingIsInCheckByKnight(myBoard, row, col, enemy_color)
+{
+  /* check for knights first */
+  for (var i = 0; i < 8; i++) {	// Check all eight possible knight moves
+	var fromRow = row + knightMove[i][0];
+	var fromCol = col + knightMove[i][1];
+	if (isInBoard(fromRow, fromCol))
+	{
+	  if (myBoard[fromRow][fromCol] == (KNIGHT + enemy_color))
+	  {
+		// Enemy knight found
+		return true;
+	  }
+	}
+  }
+  return false;
+}
+
+/** 
+ *
+ * Chequeo por alfiles o reina en verticales  
+ *
+ **/
+function validateIfKingIsInCheckByBishopAndQueen(myBoard, row, col, enemy_color)
+{
+  /** 
+   * La forma de chequear va a ser.
+   * Chequeo:
+   *  - arriba a la derecha
+   *  - arriba a la izquierda
+   *  - abajo a la derecha
+   *  - abajo a la izquierda
+   **/
+
+  var finish_bishop_check = false;
+  var aux_col_king = col;
+  var aux_row_king = row;
+  
+  // arriba a la derecha
+  while(!finish_bishop_check)
+  {
+	aux_col_king = parseInt(aux_col_king) + 1;
+	aux_row_king = parseInt(aux_row_king) + 1;
+	if(isInBoard(aux_row_king, aux_col_king))
+	{
+	  if (myBoard[aux_row_king][aux_col_king] == (BISHOP + enemy_color) || myBoard[aux_row_king][aux_col_king] == (QUEEN + enemy_color))
+	  {
+		//Enemy Bishop or Queen found
+		return true;
+	  }
+	  else
+	  {
+		if(myBoard[aux_row_king][aux_col_king] != 0)
+		{
+		  finish_bishop_check = true;
+		}
+	  }
+	}
+	else
+	{
+	  finish_bishop_check = true;
+	}
+  }
+  
+  finish_bishop_check = false;
+  aux_col_king = col;
+  aux_row_king = row;
+  
+  // arriba a la izquierda 
+  while(!finish_bishop_check)
+  {
+	aux_col_king = parseInt(aux_col_king) - 1;
+	aux_row_king = parseInt(aux_row_king) + 1;
+	if(isInBoard(aux_row_king, aux_col_king))
+	{
+	  if (myBoard[aux_row_king][aux_col_king] == (BISHOP + enemy_color) || myBoard[aux_row_king][aux_col_king] == (QUEEN + enemy_color))
+	  {
+		//Enemy Bishop or Queen found
+		return true;
+	  }
+	  else
+	  {
+		if(myBoard[aux_row_king][aux_col_king] != 0)
+		{
+		  finish_bishop_check = true;
+		}
+	  }
+	}
+	else
+	{
+	  finish_bishop_check = true;
+	}
+  }
+  
+  finish_bishop_check = false;
+  aux_col_king = col;
+  aux_row_king = row;
+  
+  // abajo a la derecha
+  while(!finish_bishop_check)
+  {
+	aux_col_king = parseInt(aux_col_king) + 1;
+	aux_row_king = parseInt(aux_row_king) - 1;
+	if(isInBoard(aux_row_king, aux_col_king))
+	{
+	  if (myBoard[aux_row_king][aux_col_king] == (BISHOP + enemy_color) || myBoard[aux_row_king][aux_col_king] == (QUEEN + enemy_color))
+	  {
+		//Enemy Bishop or Queen found
+		return true;
+	  }
+	  else
+	  {
+		if(myBoard[aux_row_king][aux_col_king] != 0)
+		{
+		  finish_bishop_check = true;
+		}
+	  }
+	}
+	else
+	{
+	  finish_bishop_check = true;
+	}
+  }
+  
+  finish_bishop_check = false;
+  aux_col_king = col;
+  aux_row_king = row;
+  
+  // abajo a la izquierda
+  while(!finish_bishop_check)
+  {
+	aux_col_king = parseInt(aux_col_king) - 1;
+	aux_row_king = parseInt(aux_row_king) - 1;
+	if(isInBoard(aux_row_king, aux_col_king))
+	{
+	  if (myBoard[aux_row_king][aux_col_king] == (BISHOP + enemy_color) || myBoard[aux_row_king][aux_col_king] == (QUEEN + enemy_color))
+	  {
+		//Enemy Bishop or Queen found
+		return true;
+	  }
+	  else
+	  {
+		if(myBoard[aux_row_king][aux_col_king] != 0)
+		{
+		  finish_bishop_check = true;
+		}
+	  }
+	}
+	else
+	{
+	  finish_bishop_check = true;
+	}
+  }
+  return false;
 }

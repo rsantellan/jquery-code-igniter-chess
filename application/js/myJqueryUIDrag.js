@@ -10,8 +10,8 @@
    
    restartOriginalPosition: function()
    {
-     console.log(this);
-     console.log('jajaja');
+     //console.log(this);
+     //console.log('jajaja');
    }
  });
 })(jQuery);

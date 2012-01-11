@@ -29,15 +29,75 @@ function moveHistoryToPosition(finalPosition)
   finalPosition = parseInt(finalPosition);
   while(movement <= finalPosition)
   {
-	$("#movement_" + movement).addClass("move_replay_selected");
-	var history_aux = history_js[movement];
-	var position = calculatePosition(history_aux.fromCol, history_aux.fromRow);
-	$("#tsq"+position +" > div > div").removeClass().addClass("white_empty");
-	var aux_piece = history_aux.curColor + "_" + history_aux.curPiece;
-	position = calculatePosition(history_aux.toCol, history_aux.toRow);
-	$("#tsq"+position +" > div > div").removeClass().addClass(aux_piece);
+	if(moveIsCastle(movement))
+	{
+	 moveKingInCastle(movement); 
+	}
+	else
+	{
+	  simpleMoveHistoryToPosition(movement);
+	}
 	movement = parseInt(movement) + 1;
   }
+}
+
+function moveIsCastle(movement)
+{
+  if(history_js[movement]['curPiece'] == "king" && (Math.abs(parseInt(history_js[movement]['toCol']) - parseInt(history_js[movement]['fromCol'])) == 2))
+  {
+	return true;
+  }
+  return false;
+}
+
+function moveKingInCastle(movement)
+{
+  console.log('tengo que mover al rey primero');
+  simpleMoveHistoryToPosition(movement);
+  
+  
+  var rookRow = 0;
+  if(history_js[movement]["curColor"] == "black")
+  {
+	rookRow = 7;
+  }
+  var rookCol = 0;
+  var rookToCol = 3
+  var positionOfKing = (parseInt(history_js[movement]['toCol']) - parseInt(history_js[movement]['fromCol']));
+  if (positionOfKing == 2)
+  {	// Kingside castling (would be == -2 if queenside)
+	  rookCol = 7;
+	  rookToCol = 5;
+  }
+  
+  console.log('tengo que encontrar la torre mas cercana y hacer el enroque');
+  
+  //var rookPiece = "rook";
+  helperMovePiece(rookCol, rookRow, rookToCol, rookRow, history_js[movement]["curColor"], "rook");
+}
+
+function helperMovePiece(fromCol, fromRow, toCol, toRow, curColor, curPiece)
+{
+  var position = calculatePosition(fromCol, fromRow);
+  $("#tsq"+position +" > div > div").removeClass().addClass("white_empty");
+  var aux_piece = curColor + "_" + curPiece;
+  position = calculatePosition(toCol, toRow);
+  $("#tsq"+position +" > div > div").removeClass().addClass(aux_piece);
+}
+
+function simpleMoveHistoryToPosition(movement)
+{
+  $("#movement_" + movement).addClass("move_replay_selected");
+  var history_aux = history_js[movement];
+  
+  helperMovePiece(history_aux.fromCol, history_aux.fromRow, history_aux.toCol, history_aux.toRow, history_aux.curColor, history_aux.curPiece);
+  /*
+  var position = calculatePosition(history_aux.fromCol, history_aux.fromRow);
+  $("#tsq"+position +" > div > div").removeClass().addClass("white_empty");
+  var aux_piece = history_aux.curColor + "_" + history_aux.curPiece;
+  position = calculatePosition(history_aux.toCol, history_aux.toRow);
+  $("#tsq"+position +" > div > div").removeClass().addClass(aux_piece);
+  */
 }
 
 function resetBoard()
