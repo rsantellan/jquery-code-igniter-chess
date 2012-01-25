@@ -28,16 +28,53 @@ function calculateRowCol(position)
 // object definition (used by isSafe)
 function GamePiece()
 {
-	this.piece = 0;
-	this.dist = 0;
+  this.piece = 0;
+  this.dist = 0;
+}
+
+function myGamePiece()
+{
+  this.col = 0;
+  this.row = 0;
+  this.pieceCode = 0;
+}
+
+
+function myGamePieceMovement(){
+  this.startingCol = 0;
+  this.startingRow = 0;
+  this.pieceCode = 0;
+  this.finishCol = 0;
+  this.finishRow = 0;
+}
+
+
+function myCloneElement(source){
+  for (i in source) {
+	if (typeof source[i] == 'source') {
+	  this[i] = new cloneObject(source[i]);
+	}
+	else{
+	  this[i] = source[i];
+	}
+  }
+}
+
+function retrievePieceType(piece_code)
+{
+  if(piece_code > BLACK)
+  {
+	piece_code = piece_code - BLACK;
+  }
+  return piece_code;
 }
 
 function isInBoard(row, col)
 {
-	if ((row >= 0) && (row <= 7) && (col >= 0) && (col <= 7))
-		return true;
-	else
-		return false;
+  if ((row >= 0) && (row <= 7) && (col >= 0) && (col <= 7))
+	return true;
+  else
+	return false;
 }
 
 /**
@@ -48,14 +85,14 @@ function isPiece(piece, toBePiece)
 {
   if(piece == toBePiece)
   {
-    return true;
+	return true;
   }
   else
   {
-    if((piece - BLACK) == toBePiece)
-    {
-      return true;
-    }
+	if((piece - BLACK) == toBePiece)
+	{
+	  return true;
+	}
   }
   return false;
     

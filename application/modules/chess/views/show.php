@@ -8,7 +8,7 @@ $borderWidth = $squareSize / 2;
 $rank = 8;
 $rankLabel = $rank;
 $files = array('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h');
-var_dump($isWhite);
+//var_dump($isWhite);
 ?>
 
 <div class="clear"></div>
@@ -190,6 +190,11 @@ endfor;
   var KING = "<?php echo KING?>";
   var BLACK = "<?php echo BLACK?>";
   var WHITE = "<?php echo WHITE?>";
+  var player_is_white = true;
+  <?php if(!$isWhite): ?>
+	 player_is_white = false;
+  <?php endif; ?>
+  
   
 </script>
 
