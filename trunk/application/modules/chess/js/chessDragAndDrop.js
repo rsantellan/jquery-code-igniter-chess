@@ -112,6 +112,343 @@ function revertMovement()
   
 }
 
+function getMovementQuantity()
+{
+  var myList = new Array();
+  var i = 0;
+  //Recorro todas las columnas
+  for(i=0; i < 8; i++)
+  {
+    //Para cada columna recorro las filas buscando por color.
+    var j = 0;
+    for(j=0; j < 8; j++)
+    {
+        if(board_js[i][j] != 0)
+        {
+          //Si el casillero no es 0 (vacio) y es del color mio.
+          if((player_is_white && board_js[i][j] < BLACK) || (!player_is_white && board_js[i][j] > BLACK))
+          {
+            var aux = new myGamePiece();
+            aux.col = i;
+            aux.row = j;
+            aux.pieceCode = board_js[i][j];
+            myList.push(aux);  
+          }
+        }
+    }
+  }
+  var movementList = new Array();
+  var index = 0;
+  for(index = 0; index < myList.length; index++)
+  {
+    switch(retrievePieceType(myList[index].pieceCode))
+    {
+      
+      case parseInt(BISHOP):
+        var bishopMovement = isBishopPosibleMovement(myList[index].col, myList[index].row, myList[index].pieceCode);
+        console.log('soy el alfil');
+        console.log(bishopMovement);
+        var forIndex = 0;
+        for(forIndex = 0; forIndex < bishopMovement.length; forIndex++)
+        {
+          movementList.push(bishopMovement[forIndex]);
+        }
+      break;
+      case parseInt(ROOK):
+        var rookMovement = retrieveAllPosibleRookMovements(myList[index].col, myList[index].row, myList[index].pieceCode);
+        var forIndex = 0;
+        for(forIndex = 0; forIndex < rookMovement.length; forIndex++)
+        {
+          movementList.push(rookMovement[forIndex]);
+        }
+        //console.log("rook");
+      break;
+      default:
+        //console.log('se chingo todo...');
+        break;
+    }
+  }
+  console.log(movementList);
+}
+
+
+function isBishopPosibleMovement(column, row, bishopCode)
+{
+  var bishopMovement = new Array();
+  
+  //Esta es la primera vez que defino las variables.
+  var auxColumn = column;
+  var finish = false;
+  var auxRow = row;
+  var quantityPassed = 0;
+  //Primero chequeo los movimientos en diagonal arriba a la derecha.
+  auxColumn ++;
+  auxRow ++;
+  while(!finish && auxColumn < 8 && auxRow < 8)
+  {
+    quantityPassed++;
+    
+    var aux_movement = isPiecePosibleMovement(column, row, auxColumn, auxRow, bishopCode);
+    
+    if(aux_movement[1] != null)
+    {
+      bishopMovement.push(aux_movement[1]);
+    }
+    if(aux_movement[0] == false)
+    {
+      finish = true;
+    }
+    auxRow ++;
+    auxColumn ++;
+  }
+  
+  quantityPassed = 0;
+  auxColumn = column;
+  auxRow = row;
+  finish = false;
+  //Segundo chequeo los movimientos en diagonal abajo a la derecha.
+  auxColumn ++;
+  auxRow --;
+  while(!finish && auxColumn < 8 && auxRow >= 0)
+  {
+    quantityPassed++;
+    var aux_movement = isPiecePosibleMovement(column, row, auxColumn, auxRow, bishopCode);
+    if(aux_movement[1] != null)
+    {
+      bishopMovement.push(aux_movement[1]);
+    }
+    if(aux_movement[0] == false)
+    {
+      finish = true;
+    }
+    auxColumn ++;
+    auxRow --;
+  }
+  
+  quantityPassed = 0;
+  
+  auxRow = row;
+  auxColumn = column;
+  finish = false;
+  //Tercero chequeo los movimientos en diagonal arriba a la izquierda.
+  auxRow ++;
+  auxColumn --;
+  while(!finish && auxColumn >= 0 && auxRow < 8)
+  {
+    quantityPassed++;
+    
+    var aux_movement = isPiecePosibleMovement(column, row, auxColumn, auxRow, bishopCode);
+    if(aux_movement[1] != null)
+    {
+      bishopMovement.push(aux_movement[1]);
+    }
+    if(aux_movement[0] == false)
+    {
+      finish = true;
+    }
+    auxRow ++;
+    auxColumn --;
+  }
+  
+//  console.log('la cantidad de veces que paso fue: ' + quantityPassed);
+  
+  quantityPassed = 0;
+  
+  auxRow = row;
+  auxColumn = column;
+  finish = false;
+  //Cuarto chequeo los movimientos en diagonal abajo a la izquierda.
+  auxRow --;
+  auxColumn --;
+  while(!finish && auxColumn >= 0 && auxRow >= 0)
+  {
+    
+    quantityPassed++;
+    
+    
+    var aux_movement = isPiecePosibleMovement(column, row, auxColumn, auxRow, bishopCode);
+    if(aux_movement[1] != null)
+    {
+      bishopMovement.push(aux_movement[1]);
+    }
+    if(aux_movement[0] == false)
+    {
+      finish = true;
+    }
+    auxRow --;
+    auxColumn --;
+    
+  }
+//  console.log('la cantidad de veces que paso fue: ' + quantityPassed);
+  //console.log(rookMovement);
+  return bishopMovement;  
+  
+  
+}
+
+function isPiecePosibleMovement(startColumn, startRow, finishColumn, finishRow, pieceCode)
+{
+  var salida = new Array();
+  //console.log('entre en isRookPosibleMovement');
+  var starting_piece = board_js[finishColumn][finishRow];
+  if((board_js[finishColumn][finishRow] != 0) && (player_is_white && board_js[finishColumn][finishRow] < BLACK) || (!player_is_white && board_js[finishColumn][finishRow] > BLACK))
+  {
+    //Estoy comiendo a uno de los mios por lo no me puedo mover mas para ese lado.
+    if(pieceCode == 4)
+    {
+      console.log('estoy pasando por arriba de uno de los mios');
+    }
+    salida[0] = false;
+    salida[1] = null;
+  }
+  else
+  {
+    //Si estoy aca entonces no estoy pasando por arriba de ninguno de los mios.
+    //Lo unico que me queda es chequear que el movimiento sea valido.
+    var board_aux = board_js;
+    board_aux[startColumn][startRow] = 0;
+    board_aux[finishColumn][finishRow] = pieceCode;
+    var is_in_check = checkForMyKingSafety(board_aux);
+    if(pieceCode == 4)
+    {
+      console.log('Estoy en jaque? : ' + is_in_check);
+    }
+    if(!is_in_check)
+    {
+      //No esta chequeado
+      var auxBoardPos = board_js[finishColumn][finishRow];
+      if(parseInt(starting_piece) == 0)
+      {
+        salida[0] = true;
+      }
+      else
+      {
+        salida[0] = false;
+      }
+      //El movimiento es valido. Por lo tanto lo puedo hacer :)
+      var aux_movement = new myGamePieceMovement();
+      aux_movement.startingCol = startColumn;
+      aux_movement.startingRow = startRow;
+      aux_movement.finishCol = finishColumn;
+      aux_movement.finishRow = finishRow;
+      aux_movement.pieceCode = pieceCode;
+      salida[1] = aux_movement;
+    }
+    else
+    {
+      salida[0] = false;
+      salida[1] = null;
+    }
+  }
+  return salida;
+}
+
+function retrieveAllPosibleRookMovements(column, row, rookCode)
+{
+  var rookMovement = new Array();
+  
+  //Esta es la primera vez que defino las variables.
+  var auxColumn = column;
+  var finish = false;
+  var auxRow = row;
+  var quantityPassed = 0;
+  //Primero chequeo los movimientos de las columna menores a 8
+  auxColumn ++;
+  while(!finish && auxColumn < 8)
+  {
+    quantityPassed++;
+    
+    var aux_movement = isPiecePosibleMovement(column, row, auxColumn, auxRow, rookCode);
+    
+    if(aux_movement[1] != null)
+    {
+      rookMovement.push(aux_movement[1]);
+    }
+    if(aux_movement[0] == false)
+    {
+      finish = true;
+    }
+    auxColumn ++;
+  }
+  
+  quantityPassed = 0;
+  auxColumn = column;
+  finish = false;
+  //Segundo chequeo los movimientos de las columna mayores a 0
+  auxColumn --;
+  while(!finish && auxColumn >= 0)
+  {
+    quantityPassed++;
+    auxRow = row;
+    
+    var aux_movement = isPiecePosibleMovement(column, row, auxColumn, auxRow, rookCode);
+    if(aux_movement[1] != null)
+    {
+      rookMovement.push(aux_movement[1]);
+    }
+    if(aux_movement[0] == false)
+    {
+      finish = true;
+    }
+    auxColumn --;
+    
+  }
+  
+  quantityPassed = 0;
+  
+  auxRow = row;
+  finish = false;
+  //Tercero chequeo los movimientos de las filas menores a 8
+  auxRow ++;
+  while(!finish && auxRow < 8)
+  {
+    quantityPassed++;
+    auxColumn = column;
+    
+    var aux_movement = isPiecePosibleMovement(column, row, auxColumn, auxRow, rookCode);
+    if(aux_movement[1] != null)
+    {
+      rookMovement.push(aux_movement[1]);
+    }
+    if(aux_movement[0] == false)
+    {
+      finish = true;
+    }
+    auxRow ++;
+  }
+  
+//  console.log('la cantidad de veces que paso fue: ' + quantityPassed);
+  
+  quantityPassed = 0;
+  
+  auxRow = row;
+  finish = false;
+  //Cuarto chequeo los movimientos de las filas mayores a 0
+  auxRow --;
+  while(!finish && auxRow >= 0)
+  {
+    
+    quantityPassed++;
+    auxColumn = column;
+    
+    var aux_movement = isPiecePosibleMovement(column, row, auxColumn, auxRow, rookCode);
+    if(aux_movement[1] != null)
+    {
+      rookMovement.push(aux_movement[1]);
+    }
+    if(aux_movement[0] == false)
+    {
+      finish = true;
+    }
+    auxRow --;
+    
+  }
+//  console.log('la cantidad de veces que paso fue: ' + quantityPassed);
+  //console.log(rookMovement);
+  return rookMovement;
+}
+
+
  
 function swapElement(element, dropArea)
 {
@@ -194,6 +531,130 @@ function isPlaceOcupied(element, dropArea)
 }
 
 /**
+ * 
+ * Devuelve true si el rey esta en peligro
+ * Devuelve false si el rey esta a salvo.
+ * 
+ **/ 
+function checkForMyKingSafety(board_auxiliary)
+{
+//  console.log('estoy llamando a checkForMyKingSafety');
+  var enemy_color = WHITE;
+  if(player_is_white)
+  {
+    enemy_color = BLACK;
+  }
+  var is_check = checkForKingSafety(board_auxiliary, enemy_color);
+//  console.log('El rey esta en jaque? ');
+//  console.log(is_check);
+  return is_check;
+}
+
+function checkForOtherKingSafety()
+{
+  var enemy_color = BLACK;
+  if(player_is_white)
+  {
+    enemy_color = WHITE;
+  }
+  return checkForMyKingSafety(board_auxiliary, enemy_color);
+}
+
+function checkForKingSafety(board_auxiliary, enemy_color)
+{
+  var player_color = WHITE;
+  if(enemy_color == player_color)
+  {
+    player_color = BLACK;
+  }
+
+  var kingPosition = retrieveKingPosition(player_color, board_auxiliary);
+  
+  
+  var is_check = isKingInCheckByKnight(board_auxiliary, kingPosition.col, kingPosition.row, enemy_color);
+  
+  if(is_check)
+  {
+    return is_check;
+  }
+  
+  is_check = validateIfKingIsInCheckByBishopAndQueen(board_auxiliary, kingPosition.row, kingPosition.col, enemy_color);
+  if(is_check)
+  {
+    return is_check;
+  }
+  
+  is_check = validateIfKingIsInCheckByRookAndQueen(board_auxiliary, kingPosition.row, kingPosition.col, enemy_color);
+  if(is_check)
+  {
+    return is_check;
+  }
+  
+  return is_check;
+  
+}
+
+function isKingInCheckByKnight(board_auxiliary, col, row, enemy_color)
+{
+  /*
+  console.log('el codigo del rey es : ' + parseInt(KING));
+  console.log('Yo digo que el rey es : ' + board_auxiliary[col][row]);
+  */
+  /* check for knights first */
+  for (var i = 0; i < 8; i++) {	// Check all eight possible knight moves
+    var fromRow = row + knightMove[i][0];
+    var fromCol = col + knightMove[i][1];
+    if (isInBoard(fromRow, fromCol))
+    {
+      //console.log('estoy mirando los posibles caballos: ' + board_auxiliary[fromRow][fromCol]);
+      //console.log('fromrow : ' + fromRow + ' fromCol : ' +fromCol); 
+      //console.log('2 - estoy mirando los posibles caballos: ' + board_auxiliary[fromCol][fromRow]);
+      //if (board_auxiliary[fromRow][fromCol] == (parseInt(KNIGHT) + parseInt(enemy_color)))
+      if (board_auxiliary[fromCol][fromRow] == (parseInt(KNIGHT) + parseInt(enemy_color)))
+      {
+        // Enemy knight found
+        return true;
+      }
+    }
+  }
+  return false;
+  
+  
+} 
+
+
+function retrieveKingPosition(search_color, board_auxiliary)
+{
+  var found = false;
+  var i = 0;
+  var kingPosition = new myGamePiece();
+  var king_value = parseInt(KING) + parseInt(search_color);
+  while(!found)
+  {
+    var j = 0;
+    while(j < 8 && !found)
+    {
+      if(parseInt(board_auxiliary[i][j]) == king_value)
+      {
+        kingPosition.col = i;
+        kingPosition.row = j;
+        found = true;
+      }
+      else
+      {
+        j = j+1;
+      }
+      
+    }
+    if(!found)
+    {
+      i = i + 1;
+    }
+  }
+  return kingPosition;
+}
+
+/**
  *
  * Devuelve true si el rey esta en peligro
  * Devuelve false si el rey esta a salvo
@@ -257,6 +718,18 @@ function checkForCheckToTheKing(element, dropArea)
   {
 	return is_check;
   }
+  
+  is_check = validateIfKingIsInCheckByRookAndQueen(board_aux, king_row, king_col, enemy_color);
+  console.log('El rey esta en jaque? ');
+  console.log(is_check);
+  if(is_check)
+  {
+	return is_check;
+  }  
+  
+  
+  
+  return is_check;
   
   
   /* tactic: start at test pos and check all 8 directions for an attacking piece */

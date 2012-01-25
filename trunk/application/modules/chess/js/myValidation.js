@@ -836,7 +836,7 @@ function validateIfKingIsInCheckByKnight(myBoard, row, col, enemy_color)
 	var fromCol = col + knightMove[i][1];
 	if (isInBoard(fromRow, fromCol))
 	{
-	  if (myBoard[fromRow][fromCol] == (KNIGHT + enemy_color))
+	  if (myBoard[fromRow][fromCol] == (parseInt(KNIGHT) + parseInt(enemy_color)))
 	  {
 		// Enemy knight found
 		return true;
@@ -873,7 +873,7 @@ function validateIfKingIsInCheckByBishopAndQueen(myBoard, row, col, enemy_color)
 	aux_row_king = parseInt(aux_row_king) + 1;
 	if(isInBoard(aux_row_king, aux_col_king))
 	{
-	  if (myBoard[aux_row_king][aux_col_king] == (BISHOP + enemy_color) || myBoard[aux_row_king][aux_col_king] == (QUEEN + enemy_color))
+	  if (myBoard[aux_row_king][aux_col_king] == (parseInt(BISHOP) + parseInt(enemy_color)) || myBoard[aux_row_king][aux_col_king] == (parseInt(QUEEN) + parseInt(enemy_color)))
 	  {
 		//Enemy Bishop or Queen found
 		return true;
@@ -903,7 +903,7 @@ function validateIfKingIsInCheckByBishopAndQueen(myBoard, row, col, enemy_color)
 	aux_row_king = parseInt(aux_row_king) + 1;
 	if(isInBoard(aux_row_king, aux_col_king))
 	{
-	  if (myBoard[aux_row_king][aux_col_king] == (BISHOP + enemy_color) || myBoard[aux_row_king][aux_col_king] == (QUEEN + enemy_color))
+	  if (myBoard[aux_row_king][aux_col_king] == (parseInt(BISHOP) + parseInt(enemy_color)) || myBoard[aux_row_king][aux_col_king] == (parseInt(QUEEN) + parseInt(enemy_color)))
 	  {
 		//Enemy Bishop or Queen found
 		return true;
@@ -933,7 +933,7 @@ function validateIfKingIsInCheckByBishopAndQueen(myBoard, row, col, enemy_color)
 	aux_row_king = parseInt(aux_row_king) - 1;
 	if(isInBoard(aux_row_king, aux_col_king))
 	{
-	  if (myBoard[aux_row_king][aux_col_king] == (BISHOP + enemy_color) || myBoard[aux_row_king][aux_col_king] == (QUEEN + enemy_color))
+	  if (myBoard[aux_row_king][aux_col_king] == (parseInt(BISHOP) + parseInt(enemy_color)) || myBoard[aux_row_king][aux_col_king] == (parseInt(QUEEN) + parseInt(enemy_color)))
 	  {
 		//Enemy Bishop or Queen found
 		return true;
@@ -963,7 +963,7 @@ function validateIfKingIsInCheckByBishopAndQueen(myBoard, row, col, enemy_color)
 	aux_row_king = parseInt(aux_row_king) - 1;
 	if(isInBoard(aux_row_king, aux_col_king))
 	{
-	  if (myBoard[aux_row_king][aux_col_king] == (BISHOP + enemy_color) || myBoard[aux_row_king][aux_col_king] == (QUEEN + enemy_color))
+	  if (myBoard[aux_row_king][aux_col_king] == (parseInt(BISHOP) + parseInt(enemy_color)) || myBoard[aux_row_king][aux_col_king] == (parseInt(QUEEN) + parseInt(enemy_color)))
 	  {
 		//Enemy Bishop or Queen found
 		return true;
@@ -981,5 +981,146 @@ function validateIfKingIsInCheckByBishopAndQueen(myBoard, row, col, enemy_color)
 	  finish_bishop_check = true;
 	}
   }
+  return false;
+}
+
+/**
+ * 
+ * Chequeo por torres y reinas
+ * 
+ */
+
+function validateIfKingIsInCheckByRookAndQueen(myBoard, row, col, enemy_color)
+{
+  /** 
+   * La forma de chequear va a ser.
+   * Chequeo:
+   *  - para arriba
+   *  - para abajo
+   *  - a la derecha
+   *  - a la izquierda
+   *  
+   **/
+
+  var finish_rook_check = false;
+  var aux_col_king = col;
+  var aux_row_king = row;
+  
+  // arriba
+  while(!finish_rook_check)
+  {
+	aux_col_king = parseInt(aux_col_king);
+	aux_row_king = parseInt(aux_row_king) + 1;
+	if(isInBoard(aux_row_king, aux_col_king))
+	{
+	  if (myBoard[aux_row_king][aux_col_king] == (parseInt(ROOK) + parseInt(enemy_color)) || myBoard[aux_row_king][aux_col_king] == (parseInt(QUEEN) + parseInt(enemy_color)))
+	  {
+		//Enemy Bishop or Queen found
+		return true;
+	  }
+	  else
+	  {
+		if(myBoard[aux_row_king][aux_col_king] != 0)
+		{
+		  finish_rook_check = true;
+		}
+	  }
+	}
+	else
+	{
+	  finish_rook_check = true;
+	}
+  }
+  
+  finish_rook_check = false;
+  aux_col_king = col;
+  aux_row_king = row;
+  
+  // abajo
+  while(!finish_rook_check)
+  {
+	aux_col_king = parseInt(aux_col_king);
+	aux_row_king = parseInt(aux_row_king) - 1;
+	if(isInBoard(aux_row_king, aux_col_king))
+	{
+	  if (myBoard[aux_row_king][aux_col_king] == (parseInt(ROOK) + parseInt(enemy_color)) || myBoard[aux_row_king][aux_col_king] == (parseInt(QUEEN) + parseInt(enemy_color)))
+	  {
+		//Enemy Bishop or Queen found
+		return true;
+	  }
+	  else
+	  {
+		if(myBoard[aux_row_king][aux_col_king] != 0)
+		{
+		  finish_rook_check = true;
+		}
+	  }
+	}
+	else
+	{
+	  finish_rook_check = true;
+	}
+  }
+  
+  finish_rook_check = false;
+  aux_col_king = col;
+  aux_row_king = row;
+  
+  // a la derecha
+  while(!finish_rook_check)
+  {
+	aux_col_king = parseInt(aux_col_king) + 1;
+	aux_row_king = parseInt(aux_row_king);
+	if(isInBoard(aux_row_king, aux_col_king))
+	{
+	  if (myBoard[aux_row_king][aux_col_king] == (parseInt(ROOK) + parseInt(enemy_color)) || myBoard[aux_row_king][aux_col_king] == (parseInt(QUEEN) + parseInt(enemy_color)))
+	  {
+		//Enemy Bishop or Queen found
+		return true;
+	  }
+	  else
+	  {
+		if(myBoard[aux_row_king][aux_col_king] != 0)
+		{
+		  finish_rook_check = true;
+		}
+	  }
+	}
+	else
+	{
+	  finish_rook_check = true;
+	}
+  }
+  
+  finish_rook_check = false;
+  aux_col_king = col;
+  aux_row_king = row;
+  
+  // a la izquierda
+  while(!finish_rook_check)
+  {
+	aux_col_king = parseInt(aux_col_king) - 1;
+	aux_row_king = parseInt(aux_row_king);
+	if(isInBoard(aux_row_king, aux_col_king))
+	{
+	  if (myBoard[aux_row_king][aux_col_king] == (parseInt(ROOK) + parseInt(enemy_color)) || myBoard[aux_row_king][aux_col_king] == (parseInt(QUEEN) + parseInt(enemy_color)))
+	  {
+		//Enemy Bishop or Queen found
+		return true;
+	  }
+	  else
+	  {
+		if(myBoard[aux_row_king][aux_col_king] != 0)
+		{
+		  finish_rook_check = true;
+		}
+	  }
+	}
+	else
+	{
+	  finish_rook_check = true;
+	}
+  }
+  console.log("no estoy siendo atacado ni por la reina, ni por el alfil");
   return false;
 }
