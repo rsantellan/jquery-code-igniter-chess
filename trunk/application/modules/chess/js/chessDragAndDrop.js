@@ -1,19 +1,21 @@
 var isAccepted = false;
+var myPosibleMovements = new Array();
 
 $(document).ready(function() {
   startDraggable();
   
   $( ".droppable" ).droppable(
-  {
-	drop: function( event, ui ) {
-	  isAccepted = acceptElement(ui.draggable, this);
-	}
-  }
+    {
+      drop: function( event, ui ) {
+        isAccepted = acceptElement(ui.draggable, this);
+      }
+    }
   );
    
   $('#table_history').tableScroll({
-	height:250
+    height:250
   });
+  initMyMoves()
 });
  
 function startDraggable()
@@ -25,9 +27,28 @@ function startDraggable()
   });
 }
  
+function initMyMoves()
+{
+  myPosibleMovements = getMovementQuantity();
+}
+ 
 function acceptElement(element, dropArea)
 {
   isAccepted = false;
+  
+  var auxMovement = isPosibleMovement(element, dropArea);
+  
+  if(auxMovement == null)
+  {
+    return false;
+  }
+  else
+  {
+    //hago lo que tengo que hacer para mover la pieza
+    console.log(auxMovement);
+    return true;
+  }
+  
   // Valido que la pieza pueda hacer el movimiento
   var isValid = isValidMoveOfElement(element, dropArea);
   if(isValid)
@@ -53,7 +74,54 @@ function acceptElement(element, dropArea)
   //swapElement(element, dropArea);
   return isValid;
 }
+
+function isPosibleMovement(element, dropArea)
+{
+  var elementCoordinates = calculateRowCol($(element).attr("position"));
+  var dropAreaCoordinates = calculateRowCol($(dropArea).attr("position"));
+  var piece_code = board_js[elementCoordinates[1]][elementCoordinates[0]];
  
+  console.log('posicion inicial');
+  console.log(elementCoordinates[1]);
+  console.log(elementCoordinates[0]);
+  console.log('esto seria en board_js algo asi como');
+  console.log(board_js[elementCoordinates[1]][elementCoordinates[0]]);
+  console.log('posicion final');
+  console.log(dropAreaCoordinates[1]);
+  console.log(dropAreaCoordinates[0]);
+ 
+  var index = 0;
+  var found = false;
+  var auxReturn = null;
+  while(index < myPosibleMovements.length && !found)
+  {
+    var auxMovement = myPosibleMovements[index];
+    
+    if(elementCoordinates[1] == auxMovement.startingCol && elementCoordinates[0] == auxMovement.startingRow)
+    {
+      if(dropAreaCoordinates[1] == auxMovement.finishCol && dropAreaCoordinates[0] == auxMovement.finishRow)
+      {
+        //found = true;
+        auxReturn = auxMovement;
+      }
+    }
+    
+    if(auxMovement.pieceCode == 160)
+    {
+      console.log('aca estaria buscando algo asi...:');
+      console.log('la pieza es: ' + auxMovement.pieceCode);
+      console.log('startingCol: ' + auxMovement.startingCol);
+      console.log('startingRow: ' + auxMovement.startingRow);
+      console.log('finishCol: ' + auxMovement.finishCol);
+      console.log('finishRow: ' + auxMovement.finishRow);
+    }
+    
+    index++;
+  }
+  
+  return auxReturn;
+}
+
 function isValidMoveOfElement(element, dropArea)
 {
   var elementCoordinates = calculateRowCol($(element).attr("position"));
@@ -143,11 +211,40 @@ function getMovementQuantity()
   {
     switch(retrievePieceType(myList[index].pieceCode))
     {
+      case parseInt(PAWN):
+        var pawnMovement = retrieveAllPosiblePawnMovement(myList[index].col, myList[index].row, myList[index].pieceCode);
+        var forIndex = 0;
+        for(forIndex = 0; forIndex < pawnMovement.length; forIndex++)
+        {
+          movementList.push(pawnMovement[forIndex]);
+        }
+      break;
+      
+      case parseInt(KNIGHT):
+        var knightMovement = retrieveAllPosibleKnightMovement(myList[index].col, myList[index].row, myList[index].pieceCode);
+        var forIndex = 0;
+        for(forIndex = 0; forIndex < knightMovement.length; forIndex++)
+        {
+          movementList.push(knightMovement[forIndex]);
+        }
+      break;
+      case parseInt(QUEEN):
+        var bishopQMovement = isBishopPosibleMovement(myList[index].col, myList[index].row, myList[index].pieceCode);
+        var forIndex = 0;
+        for(forIndex = 0; forIndex < bishopQMovement.length; forIndex++)
+        {
+          movementList.push(bishopQMovement[forIndex]);
+        }
+        var rookQMovement = retrieveAllPosibleRookMovements(myList[index].col, myList[index].row, myList[index].pieceCode);
+        forIndex = 0;
+        for(forIndex = 0; forIndex < rookQMovement.length; forIndex++)
+        {
+          movementList.push(rookQMovement[forIndex]);
+        }
+      break;
       
       case parseInt(BISHOP):
         var bishopMovement = isBishopPosibleMovement(myList[index].col, myList[index].row, myList[index].pieceCode);
-        console.log('soy el alfil');
-        console.log(bishopMovement);
         var forIndex = 0;
         for(forIndex = 0; forIndex < bishopMovement.length; forIndex++)
         {
@@ -163,14 +260,183 @@ function getMovementQuantity()
         }
         //console.log("rook");
       break;
+      case parseInt(KING):
+        var kingMovement = retrieveAllPosibleKingMovement(myList[index].col, myList[index].row, myList[index].pieceCode);
+        var forIndex = 0;
+        for(forIndex = 0; forIndex < kingMovement.length; forIndex++)
+        {
+          movementList.push(kingMovement[forIndex]);
+        }
+      break;
       default:
         //console.log('se chingo todo...');
         break;
     }
   }
+  
+  return movementList;
   console.log(movementList);
 }
 
+function retrieveAllPosiblePawnMovement(column, row, pawnCode)
+{
+  var pawnMove = new Array();
+  var pawnRow = 1;
+  if(!player_is_white) pawnRow = 6;  
+  
+  var moveForward = 1;
+  if(!player_is_white) moveForward = -1;
+  /*
+  console.log('La columna es');
+  console.log(board_js[column]);
+  console.log('el peon es');
+  console.log(board_js[column][row]);  
+  */
+  //Chequeo el avance simple
+  var auxColumn = column + moveForward;
+  var auxRow = row;
+  /*
+  console.log('el peon estaba en ; col: ' +column + ' row: ' + row );
+  console.log('el peon pasa a estar en ; col: ' +auxColumn + ' row: ' + auxRow );
+  console.log('antes : ' +  board_js[column][row]);
+  console.log('despues : ' +  board_js[auxColumn][auxRow]);
+  console.log(auxRow);
+  console.log(auxColumn);
+  */
+  if(board_js[auxColumn][auxRow] == 0)
+  {
+    //console.log('el lugar esta vacio por lo tanto se puede mover');
+    var aux_movement = isPiecePosibleMovement(column, row, auxColumn, auxRow, pawnCode);
+    if(aux_movement[1] != null)
+    {
+      pawnMove.push(aux_movement[1]);
+    }
+  }
+
+  //Chequeo si puedo comer a los costados.
+  //primero chequeo a la derecha
+  auxColumn = column + moveForward;
+  auxRow = row + moveForward;
+  if((board_js[auxColumn][auxRow] != 0) && (player_is_white && board_js[auxColumn][auxRow] > BLACK) || (!player_is_white && board_js[auxColumn][auxRow] < BLACK))
+  {
+    //console.log('hay una pieza enemiga por lo tanto puedo comer');
+    var aux_movement = isPiecePosibleMovement(column, row, auxColumn, auxRow, pawnCode);
+    if(aux_movement[1] != null)
+    {
+      pawnMove.push(aux_movement[1]);
+    }
+  }
+  
+  //despues chequeo a la izquierda
+  auxColumn = column + moveForward;
+  auxRow = row - moveForward;
+  if((board_js[auxColumn][auxRow] != 0) && (player_is_white && board_js[auxColumn][auxRow] > BLACK) || (!player_is_white && board_js[auxColumn][auxRow] < BLACK))
+  {
+    //console.log('hay una pieza enemiga por lo tanto puedo comer');
+    var aux_movement = isPiecePosibleMovement(column, row, auxColumn, auxRow, pawnCode);
+    if(aux_movement[1] != null)
+    {
+      pawnMove.push(aux_movement[1]);
+    }
+  }
+  
+  //Chequeo si se puede mover dos filas, dado que nunca se movio.
+  
+  if(column == pawnRow)
+  {
+    //console.log('el peon nunca se movio');
+    auxColumn = column + moveForward + moveForward;
+    auxRow = row;
+    if(board_js[auxColumn][auxRow] == 0)
+    {
+      //console.log('el lugar esta vacio por lo tanto se puede mover');
+      var aux_movement = isPiecePosibleMovement(column, row, auxColumn, auxRow, pawnCode);
+      if(aux_movement[1] != null)
+      {
+        pawnMove.push(aux_movement[1]);
+      }
+    }
+  }
+  
+  //Ahora el ultimo chequeo seria el poder hacer que el peon coma al paso.
+  //Para eso tengo que chequear que el ultimo movimiento sea de un peon.
+  
+  var last_movement = history_js[history_js.length -1];
+  if(last_movement.curPiece == "pawn")
+  {
+    if(Math.abs(last_movement.fromRow - last_movement.toRow) == 2)
+    {
+      //console.log('el ultimo movimiento fue de a dos');
+      //Tengo que chequear que este al lado del peon que estoy moviendo.
+      if(last_movement.toCol == row + 1)
+      {
+        //Esta al lado!!!
+        //Entonces puedo comer ;)
+        var aux_movement = isPiecePosibleMovement(column, row, column + 1, row + 1, pawnCode);
+        if(aux_movement[1] != null)
+        {
+          pawnMove.push(aux_movement[1]);
+        }
+      }
+      if(last_movement.toCol == row - 1)
+      {
+        //Esta al lado!!!
+        //Entonces puedo comer ;)
+        var aux_movement = isPiecePosibleMovement(column, row, column + 1, row - 1, pawnCode);
+        if(aux_movement[1] != null)
+        {
+          pawnMove.push(aux_movement[1]);
+        }
+      }
+      
+    }
+  }
+  
+  //console.log('los movimientos del peon es:');
+  //console.log(pawnMove);
+  return pawnMove;
+}
+
+function retrieveAllPosibleKingMovement(column, row, kingCode)
+{
+  var kingMovement = new Array();
+  
+  for(var i = 0; i < kingMove.length; i++)
+  {
+    var auxRow = row + kingMove[i][0];
+    var auxColumn = column + kingMove[i][1];
+    var aux_movement = isPiecePosibleMovement(column, row, auxColumn, auxRow, kingCode);
+    if(aux_movement[1] != null)
+    {
+      kingMovement.push(aux_movement[1]);
+    }
+  }
+  var castleMoves = returnKingCastleMovements();
+  console.log(castleMoves);
+  for(var j = 0; j < castleMoves.length; j++)
+  {
+    kingMovement.push(castleMoves[j]);
+  } 
+  //console.log('Los movimientos del rey son: ');
+  //console.log(kingMovement);
+  return kingMovement;
+}
+
+function retrieveAllPosibleKnightMovement(column, row, knigthCode)
+{
+  var knightMovement = new Array();
+  
+  for (var i = 0; i < 8; i++) {	// Check all eight possible knight moves
+    var auxRow = row + knightMove[i][0];
+    var auxColumn = column + knightMove[i][1];
+    var aux_movement = isPiecePosibleMovement(column, row, auxColumn, auxRow, knigthCode);
+    if(aux_movement[1] != null)
+    {
+      knightMovement.push(aux_movement[1]);
+    }
+  }
+  return knightMovement;  
+}
 
 function isBishopPosibleMovement(column, row, bishopCode)
 {
@@ -289,15 +555,19 @@ function isBishopPosibleMovement(column, row, bishopCode)
 function isPiecePosibleMovement(startColumn, startRow, finishColumn, finishRow, pieceCode)
 {
   var salida = new Array();
-  //console.log('entre en isRookPosibleMovement');
+  
+  if(!isInBoard(finishColumn, finishRow))
+  {
+    salida[0] = false;
+    salida[1] = null;
+    return salida;
+  }
+  
+  //console.log('entre en isPiecePosibleMovement');
   var starting_piece = board_js[finishColumn][finishRow];
   if((board_js[finishColumn][finishRow] != 0) && (player_is_white && board_js[finishColumn][finishRow] < BLACK) || (!player_is_white && board_js[finishColumn][finishRow] > BLACK))
   {
     //Estoy comiendo a uno de los mios por lo no me puedo mover mas para ese lado.
-    if(pieceCode == 4)
-    {
-      console.log('estoy pasando por arriba de uno de los mios');
-    }
     salida[0] = false;
     salida[1] = null;
   }
@@ -305,14 +575,21 @@ function isPiecePosibleMovement(startColumn, startRow, finishColumn, finishRow, 
   {
     //Si estoy aca entonces no estoy pasando por arriba de ninguno de los mios.
     //Lo unico que me queda es chequear que el movimiento sea valido.
-    var board_aux = board_js;
+    //var newObject = jQuery.extend(true, {}, board_js);
+    //console.log('la copia del objecto es');
+    //console.log(newObject);
+    var board_aux = jQuery.extend(true, {}, board_js);// board_js;
     board_aux[startColumn][startRow] = 0;
+    
+    //console.log('antes de moverse la pieza era: ' + board_aux[finishColumn][finishRow]);
+    
     board_aux[finishColumn][finishRow] = pieceCode;
+    /*
+    console.log('tendria que hacer lo mismo que para acceder como un array');
+    console.log('esta seria la nueva pieza :  ' + board_aux[finishColumn][finishRow] );
+    console.log('esto no deberia de ser lo mismo que lo anterior : ' + newObject[finishColumn][finishRow]);
+    */ 
     var is_in_check = checkForMyKingSafety(board_aux);
-    if(pieceCode == 4)
-    {
-      console.log('Estoy en jaque? : ' + is_in_check);
-    }
     if(!is_in_check)
     {
       //No esta chequeado
@@ -578,13 +855,19 @@ function checkForKingSafety(board_auxiliary, enemy_color)
     return is_check;
   }
   
-  is_check = validateIfKingIsInCheckByBishopAndQueen(board_auxiliary, kingPosition.row, kingPosition.col, enemy_color);
+  is_check = isKingInCheckByBishopOrQueen(board_auxiliary, kingPosition.col, kingPosition.row, enemy_color);
   if(is_check)
   {
     return is_check;
   }
   
-  is_check = validateIfKingIsInCheckByRookAndQueen(board_auxiliary, kingPosition.row, kingPosition.col, enemy_color);
+  is_check = isKingInCheckByRookOrQueen(board_auxiliary, kingPosition.col, kingPosition.row, enemy_color);
+  if(is_check)
+  {
+    return is_check;
+  }
+  
+  is_check = isKingInCheckByPawn(board_auxiliary, kingPosition.col, kingPosition.row, enemy_color);
   if(is_check)
   {
     return is_check;
@@ -593,6 +876,314 @@ function checkForKingSafety(board_auxiliary, enemy_color)
   return is_check;
   
 }
+
+
+function isKingInCheckByPawn(board_auxiliary, col, row, enemy_color)
+{
+  //Los peones solo van para adelante.
+  //Por lo tanto lo unico que tendria que chequear seria las dos diagonales
+  //En direccion de las piezas contrarias.
+  
+  //Si es blanca seria.
+  // [+1, +1], [-1, +1]
+  //Si es Negra seria.
+  // [+1, -1], [-1, -1]
+  var auxColLeft = col - 1;
+  var auxColRight = col + 1;
+  var auxRow = row;
+  if(enemy_color == BLACK)
+  {
+    auxRow++;
+  }
+  else
+  {
+    auxRow--;
+  }
+  //Chequeo a la izquierda.
+  if(isInBoard(auxRow, auxColLeft))
+  {
+    if (board_auxiliary[auxColLeft][auxRow] == (parseInt(PAWN) + parseInt(enemy_color)))
+    {
+      return true;
+    }
+  }
+  //Chequeo a la derecha.
+  if(isInBoard(auxRow, auxColRight))
+  {
+    if (board_auxiliary[auxColRight][auxRow] == (parseInt(PAWN) + parseInt(enemy_color)))
+    {
+      return true;
+    }
+  }
+  
+  return false;  
+  
+}
+
+function auxIsKingInCheckByRookOrQueen(board_auxiliary, col, row, enemy_color)
+{
+  if(isInBoard(row, col))
+  {
+    //console.log(" del costado es : " + board_auxiliary[col][row]);
+    if (board_auxiliary[col][row] == (parseInt(ROOK) + parseInt(enemy_color)) || board_auxiliary[col][row] == (parseInt(QUEEN) + parseInt(enemy_color)))
+    {
+      //Enemy Rook or Queen found
+      return 2;
+    }
+    else
+    {
+      if(board_auxiliary[col][row] != 0)
+      {
+        return 1;
+      }
+    }
+  }
+  else
+  {
+    return 1;
+  }
+  return 0;
+}
+
+/**
+ * 
+ * Chequeo por torres y reinas
+ * 
+ */
+function isKingInCheckByRookOrQueen(board_auxiliary, col, row, enemy_color)
+//function validateIfKingIsInCheckByRookAndQueen(myBoard, row, col, enemy_color)
+{
+  /** 
+   * La forma de chequear va a ser.
+   * Chequeo:
+   *  - para arriba
+   *  - para abajo
+   *  - a la derecha
+   *  - a la izquierda
+   *  
+   **/
+
+  var finish_rook_check = false;
+  var aux_col_king = col;
+  var aux_row_king = row;
+  
+  // arriba
+  while(!finish_rook_check)
+  {
+    aux_col_king = parseInt(aux_col_king);
+    aux_row_king = parseInt(aux_row_king) + 1;
+  
+    var result = auxIsKingInCheckByRookOrQueen(board_auxiliary, aux_col_king, aux_row_king, enemy_color);
+    switch(result)
+    {
+      case 2:
+        return true;
+        break;
+      case 1:
+        finish_rook_check = true;
+        break;
+    }
+  }
+  
+  finish_rook_check = false;
+  aux_col_king = col;
+  aux_row_king = row;
+  
+  // abajo
+  while(!finish_rook_check)
+  {
+    aux_col_king = parseInt(aux_col_king);
+    aux_row_king = parseInt(aux_row_king) - 1;
+    var result = auxIsKingInCheckByRookOrQueen(board_auxiliary, aux_col_king, aux_row_king, enemy_color);
+    switch(result)
+    {
+      case 2:
+        return true;
+        break;
+      case 1:
+        finish_rook_check = true;
+        break;
+    }
+  }
+  
+  finish_rook_check = false;
+  aux_col_king = col;
+  aux_row_king = row;
+  
+  // a la derecha
+  while(!finish_rook_check)
+  {
+    aux_col_king = parseInt(aux_col_king) + 1;
+    aux_row_king = parseInt(aux_row_king);
+    var result = auxIsKingInCheckByRookOrQueen(board_auxiliary, aux_col_king, aux_row_king, enemy_color);
+    switch(result)
+    {
+      case 2:
+        return true;
+        break;
+      case 1:
+        finish_rook_check = true;
+        break;
+    }
+  }
+  
+  finish_rook_check = false;
+  aux_col_king = col;
+  aux_row_king = row;
+  
+  // a la izquierda
+  while(!finish_rook_check)
+  {
+    aux_col_king = parseInt(aux_col_king) - 1;
+    aux_row_king = parseInt(aux_row_king);
+    var result = auxIsKingInCheckByRookOrQueen(board_auxiliary, aux_col_king, aux_row_king, enemy_color);
+    switch(result)
+    {
+      case 2:
+        return true;
+        break;
+      case 1:
+        finish_rook_check = true;
+        break;
+    }
+  }
+  //console.log("no estoy siendo atacado ni por la reina, ni por el alfil");
+  return false;
+}
+
+function auxIsKingInCheckByBishopOrQueen(board_auxiliary, col, row, enemy_color)
+{
+  if(isInBoard(row, col))
+  {
+    //console.log(" la diagonal es : " + board_auxiliary[col][row]);
+    if (board_auxiliary[col][row] == (parseInt(BISHOP) + parseInt(enemy_color)) || board_auxiliary[col][row] == (parseInt(QUEEN) + parseInt(enemy_color)))
+    {
+      //Enemy Bishop or Queen found
+      return 2;
+    }
+    else
+    {
+      if(board_auxiliary[col][row] != 0)
+      {
+        return 1;
+      }
+    }
+  }
+  else
+  {
+    return 1;
+  }
+  return 0;
+}
+
+/** 
+ *
+ * Chequeo por alfiles o reina en verticales  
+ *
+ **/
+function isKingInCheckByBishopOrQueen(board_auxiliary, col, row, enemy_color)
+{
+  /** 
+   * La forma de chequear va a ser.
+   * Chequeo:
+   *  - arriba a la derecha
+   *  - arriba a la izquierda
+   *  - abajo a la derecha
+   *  - abajo a la izquierda
+   **/
+
+  //console.log('el codigo del rey es : ' + parseInt(KING));
+  //console.log('Yo digo que el rey es : ' + board_auxiliary[col][row]);
+
+  var finish_bishop_check = false;
+  var aux_col_king = col;
+  var aux_row_king = row;
+  
+  // arriba a la derecha
+  while(!finish_bishop_check)
+  {
+    aux_col_king = parseInt(aux_col_king) + 1;
+    aux_row_king = parseInt(aux_row_king) + 1;
+    var result = auxIsKingInCheckByBishopOrQueen(board_auxiliary, aux_col_king, aux_row_king, enemy_color);
+    switch(result)
+    {
+      case 2:
+        return true;
+        break;
+      case 1:
+        finish_bishop_check = true;
+        break;
+    }
+    
+  }
+  
+  finish_bishop_check = false;
+  aux_col_king = col;
+  aux_row_king = row;
+  
+  // arriba a la izquierda 
+  while(!finish_bishop_check)
+  {
+    aux_col_king = parseInt(aux_col_king) - 1;
+    aux_row_king = parseInt(aux_row_king) + 1;
+    var result = auxIsKingInCheckByBishopOrQueen(board_auxiliary, aux_col_king, aux_row_king, enemy_color);
+    switch(result)
+    {
+      case 2:
+        return true;
+        break;
+      case 1:
+        finish_bishop_check = true;
+        break;
+    }
+  }
+  
+  finish_bishop_check = false;
+  aux_col_king = col;
+  aux_row_king = row;
+  
+  // abajo a la derecha
+  while(!finish_bishop_check)
+  {
+    aux_col_king = parseInt(aux_col_king) + 1;
+    aux_row_king = parseInt(aux_row_king) - 1;
+    var result = auxIsKingInCheckByBishopOrQueen(board_auxiliary, aux_col_king, aux_row_king, enemy_color);
+    switch(result)
+    {
+      case 2:
+        return true;
+        break;
+      case 1:
+        finish_bishop_check = true;
+        break;
+    }
+  }
+  
+  finish_bishop_check = false;
+  aux_col_king = col;
+  aux_row_king = row;
+  
+  // abajo a la izquierda
+  while(!finish_bishop_check)
+  {
+    aux_col_king = parseInt(aux_col_king) - 1;
+    aux_row_king = parseInt(aux_row_king) - 1;
+    var result = auxIsKingInCheckByBishopOrQueen(board_auxiliary, aux_col_king, aux_row_king, enemy_color);
+    switch(result)
+    {
+      case 2:
+        return true;
+        break;
+      case 1:
+        finish_bishop_check = true;
+        break;
+    }
+  }
+  return false;
+}
+
+
+
 
 function isKingInCheckByKnight(board_auxiliary, col, row, enemy_color)
 {
@@ -606,9 +1197,6 @@ function isKingInCheckByKnight(board_auxiliary, col, row, enemy_color)
     var fromCol = col + knightMove[i][1];
     if (isInBoard(fromRow, fromCol))
     {
-      //console.log('estoy mirando los posibles caballos: ' + board_auxiliary[fromRow][fromCol]);
-      //console.log('fromrow : ' + fromRow + ' fromCol : ' +fromCol); 
-      //console.log('2 - estoy mirando los posibles caballos: ' + board_auxiliary[fromCol][fromRow]);
       //if (board_auxiliary[fromRow][fromCol] == (parseInt(KNIGHT) + parseInt(enemy_color)))
       if (board_auxiliary[fromCol][fromRow] == (parseInt(KNIGHT) + parseInt(enemy_color)))
       {
@@ -621,6 +1209,186 @@ function isKingInCheckByKnight(board_auxiliary, col, row, enemy_color)
   
   
 } 
+
+function returnKingCastleMovements()
+{
+  var my_color = "black";
+  if(player_is_white)
+  {
+    my_color = "white";
+  }
+  
+  var kingCastleMovements = new Array();
+  var found = false;
+  var index = 0;
+  var leftRookMove = false;
+  var rightRookMove = false;
+  while(index < history_js.length && !found)
+  {
+    var auxHistory = history_js[index];
+    
+    if(auxHistory.curColor == my_color && auxHistory.curPiece == "king")
+    {
+        found = true;
+    }
+    
+    if(auxHistory.curColor == my_color && auxHistory.curPiece == "rook")
+    {
+      
+      if(7 == parseInt(auxHistory.fromCol))
+      {
+        rightRookMove = true;
+      }
+      else
+      {
+        leftRookMove = true;
+      }
+    }
+    if(rightRookMove && leftRookMove)
+    {
+      found = true;
+    }
+    index++;
+  }
+  
+  if(found) return kingCastleMovements;
+  
+  var kingRow = 0;
+  if(!player_is_white) kingRow = 7;
+  
+  if(!rightRookMove)
+  {
+    var isPieceInMiddle = false;
+    var newIndex = 5;
+    //console.log('chequeo el derecho que es el que tiende a 7');
+    while(!isPieceInMiddle && newIndex < 7)
+    {
+      if(board_js[kingRow][newIndex] != 0)
+      {
+        isPieceInMiddle = true;
+        //console.log('no esta vacio, no puede hacer el enroque para ese lado');
+        rightRookMove = true;
+      }
+      //console.log('El indice es : ' + newIndex + ' la columna del rey es: ' + kingRow);
+      //console.log(board_js[kingRow][newIndex])
+      //console.log(board_js[newIndex][kingRow])
+      newIndex++;
+    }
+  }
+  
+  if(!leftRookMove)
+  {
+    var isPieceInMiddle = false;
+    var newIndex = 3;
+    //console.log('chequeo el izquierdo que es aquel que tiende a 0');
+    while(!isPieceInMiddle && newIndex > 0)
+    {
+      if(board_js[kingRow][newIndex] != 0)
+      {
+        isPieceInMiddle = true;
+        //console.log('no esta vacio, no puede hacer el enroque para ese lado');
+        leftRookMove = true;
+      }
+      //console.log('El indice es : ' + newIndex + ' la columna del rey es: ' + kingRow);
+      //console.log(board_js[kingRow][newIndex])
+      //console.log(board_js[newIndex][kingRow])
+      newIndex--;
+    }
+    
+  }
+  if(!rightRookMove)
+  {
+    var board_aux = jQuery.extend(true, {}, board_js);
+    //Voy llevando al rey a su posicion
+    board_aux[kingRow][5] = board_js[kingRow][4];
+    board_aux[kingRow][4] = 0;
+    //Chequeo que no este en jaque en el camino
+    var is_in_check = checkForMyKingSafety(board_aux);
+    if(is_in_check)
+    {
+      //console.log('el rey esta en jaque en el camino por lo tanto no puede hacer enroque');
+    }
+    else
+    {
+      //Coloco el rey en su nueva posicion.
+      board_aux[kingRow][6] = board_js[kingRow][4];
+      //Pongo aca por que el rey ya se habia movido uno.
+      board_aux[kingRow][5] = 0;
+      //Coloco la torre en la nueva posicion
+      board_aux[kingRow][5] = board_js[kingRow][7];
+      board_aux[kingRow][0] = 0;
+      //Chequeo que no este en jaque en esa posicion.
+      is_in_check = checkForMyKingSafety(board_aux);
+      if(!is_in_check)
+      {
+        //console.log('el movimiento de enroque es valido, creo el movimiento');
+        var aux_movement = new myGamePieceMovement();
+        //Esto va al revez??
+        /*
+        aux_movement.startingCol = 4;
+        aux_movement.startingRow = kingRow;
+        aux_movement.finishCol = 6;
+        aux_movement.finishRow = kingRow;
+        */
+        aux_movement.startingCol = kingRow;
+        aux_movement.startingRow = 4;
+        aux_movement.finishCol = kingRow;
+        aux_movement.finishRow = 6;
+        aux_movement.isKingRook = true;
+        aux_movement.pieceCode = board_js[kingRow][4];
+        kingCastleMovements.push(aux_movement);
+      }      
+    }
+    
+  }
+  
+  if(!leftRookMove)
+  {
+    var board_aux = jQuery.extend(true, {}, board_js);
+    //Voy llevando al rey a su posicion
+    
+    board_aux[kingRow][3] = board_js[kingRow][4];
+    board_aux[kingRow][4] = 0;
+    //Chequeo que no este en jaque
+    var is_in_check = checkForMyKingSafety(board_aux);
+    if(is_in_check)
+    {
+      //console.log('el rey esta en jaque en el camino por lo tanto no puede hacer enroque');
+    }
+    else
+    {
+      //Coloco el rey en su nueva posicion.
+      board_aux[kingRow][2] = board_js[kingRow][4];
+      //Pongo aca por que el rey ya se habia movido uno.
+      board_aux[kingRow][3] = 0;
+      //Coloco la torre en la nueva posicion
+      board_aux[kingRow][3] = board_js[kingRow][0];
+      board_aux[kingRow][0] = 0;
+      //Chequeo que no este en jaque en esa posicion.
+      is_in_check = checkForMyKingSafety(board_aux);
+      if(!is_in_check)
+      {
+        //console.log('el movimiento de enroque es valido, creo el movimiento');
+        var aux_movement = new myGamePieceMovement();
+        //Esto va al revez??
+        /*
+        aux_movement.startingCol = 4;
+        aux_movement.startingRow = kingRow;
+        aux_movement.finishCol = 2;
+        aux_movement.finishRow = kingRow;
+        */
+        aux_movement.startingCol = kingRow;
+        aux_movement.startingRow = 4;
+        aux_movement.finishCol = kingRow;
+        aux_movement.finishRow = 2;
+        aux_movement.isKingRook = true;
+        aux_movement.pieceCode = board_js[kingRow][4];
+        kingCastleMovements.push(aux_movement);
+      }      
+    }
+  }
+  return kingCastleMovements;
+}
 
 
 function retrieveKingPosition(search_color, board_auxiliary)
@@ -654,6 +1422,14 @@ function retrieveKingPosition(search_color, board_auxiliary)
   return kingPosition;
 }
 
+
+
+/***
+ * 
+ *  DE ACA PARA ABAJO NO SE USARIA!!!
+ * 
+ * 
+ **/ 
 /**
  *
  * Devuelve true si el rey esta en peligro

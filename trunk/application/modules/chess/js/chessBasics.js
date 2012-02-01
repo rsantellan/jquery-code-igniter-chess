@@ -8,6 +8,8 @@ var PROMOTEDTO = 6;
 
 var knightMove = [[-1, -2], [+1, -2], [-2, -1], [-2, +1], [-1, +2], [+1, +2], [+2, -1], [+2, +1]];
 
+var kingMove = [[-1, -1], [-1, 0], [-1, +1], [0,+1], [0,-1], [+1,+1], [+1,0], [+1,-1]];
+
 function calculatePosition(col, row)
 {
   var position = parseInt(col) + parseInt(row * 8);
@@ -46,6 +48,8 @@ function myGamePieceMovement(){
   this.pieceCode = 0;
   this.finishCol = 0;
   this.finishRow = 0;
+  this.isKingRook = false;
+  this.isPawnTwoMoves = false;
 }
 
 
