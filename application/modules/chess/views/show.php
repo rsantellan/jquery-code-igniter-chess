@@ -61,7 +61,10 @@ for($k = 63; $k >= 0; $k--):
 		<?php 
 		if($piece != "white_empty")
 		{
-		  $piece .= " draggable";
+      if($piece_color == 'white' && $isWhite || $piece_color == 'black' && !$isWhite)
+      {
+        $piece .= " draggable";
+      }
 		}
 		else
 		{

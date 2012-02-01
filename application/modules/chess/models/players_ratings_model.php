@@ -18,15 +18,21 @@ class players_ratings_model extends CI_Model{
   private $draw = 0;
   private $points = 1500;
   
+  private $playersEloHistory = array();
+  
   function __construct()
   {
 	  parent::__construct();
   }
   
-  public function reloadAllRatings($games)
+  public function reloadAllRatings($games, $accessDatabase = true)
   {
-	$this->db->where('playerID >', "0");
-	$this->db->delete('players_ratings');
+	if($accessDatabase)
+	{
+	  $this->db->where('playerID >', "0");
+	  $this->db->delete('players_ratings');
+	}
+	
 	
 	$players_ratings = array();
 	foreach($games as $game)
@@ -39,25 +45,32 @@ class players_ratings_model extends CI_Model{
 		
 		
 		$rWhite = null;
+		$hrWhite = null;
 		if(isset($players_ratings[$white]))
 		{
 		  $rWhite = $players_ratings[$white];
+		  $hrWhite = $this->playersEloHistory[$white];
 		}
 		else
 		{
 		  $rWhite = new players_ratings_model();
 		  $rWhite->setPlayerId($white);
+		  $hrWhite = new EloRatingHistory($white);
+		  
 		}
 		
 		$rBlack = null;
+		$hrBlack = null;
 		if(isset($players_ratings[$black]))
 		{
 		  $rBlack = $players_ratings[$black];
+		  $hrBlack = $this->playersEloHistory[$black];
 		}
 		else
 		{
 		  $rBlack = new players_ratings_model();
 		  $rBlack->setPlayerId($black);
+		  $hrBlack = new EloRatingHistory($black);
 		}
 		
 		switch ($game->getGameMessage()) {
@@ -69,7 +82,8 @@ class players_ratings_model extends CI_Model{
 			$aux_ratings = $elo->getNewRatings();
 			$rWhite->setPoints($aux_ratings['a']);
 			$rBlack->setPoints($aux_ratings['b']);
-			
+			$hrWhite->addGame(EloRatingHistory::TIE, $aux_ratings['a']);
+			$hrBlack->addGame(EloRatingHistory::TIE, $aux_ratings['b']);
 			break;
 		  case "playerResigned":
 			$statusA = 0;
@@ -88,6 +102,19 @@ class players_ratings_model extends CI_Model{
 			}
 			$elo = new EloRating($rWhite->getPoints(), $rBlack->getPoints(), $statusA, $statusB, $rWhite->getTotalGames(), $rBlack->getTotalGames());
 			$aux_ratings = $elo->getNewRatings();
+			
+			if($game->getMessageFrom() == "white")
+			{
+			  $hrWhite->addGame(EloRatingHistory::LOOSE, $aux_ratings['a']);
+			  $hrBlack->addGame(EloRatingHistory::WON, $aux_ratings['b']);
+			}
+			else
+			{
+			  $hrWhite->addGame(EloRatingHistory::WON, $aux_ratings['a']);
+			  $hrBlack->addGame(EloRatingHistory::LOOSE, $aux_ratings['b']);
+			}
+			
+			
 			$rWhite->setPoints($aux_ratings['a']);
 			$rBlack->setPoints($aux_ratings['b']);
 			break;
@@ -99,7 +126,6 @@ class players_ratings_model extends CI_Model{
 			  $statusB = 1;
 			  $rBlack->setWin(1);
 			  $rWhite->setLose(1);
-			  
 			}
 			else
 			{
@@ -109,6 +135,17 @@ class players_ratings_model extends CI_Model{
 			}
 			$elo = new EloRating($rWhite->getPoints(), $rBlack->getPoints(), $statusA, $statusB, $rWhite->getTotalGames(), $rBlack->getTotalGames());
 			$aux_ratings = $elo->getNewRatings();
+			
+			if($game->getMessageFrom() == "black")
+			{
+			  $hrWhite->addGame(EloRatingHistory::LOOSE, $aux_ratings['a']);
+			  $hrBlack->addGame(EloRatingHistory::WON, $aux_ratings['b']);
+			}
+			else
+			{
+			  $hrWhite->addGame(EloRatingHistory::WON, $aux_ratings['a']);
+			  $hrBlack->addGame(EloRatingHistory::LOOSE, $aux_ratings['b']);
+			}
 			$rWhite->setPoints($aux_ratings['a']);
 			$rBlack->setPoints($aux_ratings['b']);
 			break;	  
@@ -118,13 +155,20 @@ class players_ratings_model extends CI_Model{
     //var_dump($elo);
 		$players_ratings[$white] = $rWhite;
 		$players_ratings[$black] = $rBlack;
+		$this->playersEloHistory[$white] = $hrWhite;
+		$this->playersEloHistory[$black] = $hrBlack;
 	  }
 	}
-	foreach($players_ratings as $p_rating)
+	if($accessDatabase)
 	{
-	  $p_rating->save();
+	  foreach($players_ratings as $p_rating)
+	  {
+		$p_rating->save();
+	  }
 	}
+	
 	usort($players_ratings, "players_ratings_model::sortPlayersRatings");
+	//var_dump(count($this->playersEloHistory));
 	return $players_ratings;
   }
   
@@ -199,6 +243,8 @@ class players_ratings_model extends CI_Model{
   }
 
 
+  public function getPlayersEloHistory()
+  {
+	return $this->playersEloHistory;
+  }
 }
-
-

@@ -62,7 +62,7 @@ class chess extends MY_Controller {
     $this->data['board_js'] =  $this->pieces_model->generateArrayOfBoard($this->data['board']);
     
     
-    $this->data['isWhite'] = true;
+    $this->data['isWhite'] = false;
     
     $this->addModuleJavascript("chess", "chessBasics.js");
     if($chessGame->isGameOver())
@@ -94,7 +94,7 @@ class chess extends MY_Controller {
   public function ratings()
   {
 	
-	$this->output->enable_profiler(TRUE);
+	//$this->output->enable_profiler(TRUE);
 	
 	$this->load->model("chess/games_model");
 	
@@ -106,11 +106,50 @@ class chess extends MY_Controller {
 	
 	$this->data["players_ratings"] = $this->players_ratings_model->reloadAllRatings($games);
 	
+	$this->data["players_history"] = $this->players_ratings_model->getPlayersEloHistory();
+	
+	
 	
 	$this->data["players"] =$this->players_model->retrieveAllPlayers();
+	
+	//$this->addModuleJavascript('chess', 'excanvas.min.js');
+	$this->addModuleJavascript('chess', 'jquery.jqplot.min.js');
+	$this->addModuleJavascript('chess', 'jqplot_plugins/jqplot.pieRenderer.js');
+	$this->addModuleJavascript('chess', 'jqplot_plugins/jqplot.logAxisRenderer.min.js');
+	$this->addModuleJavascript('chess', 'jqplot_plugins/jqplot.cursor.min.js');
+	$this->addModuleJavascript('chess', 'jqplot_plugins/jqplot.highlighter.min.js');
+	$this->addModuleJavascript('chess', 'my-graphs.js');
+	$this->addModuleStyleSheet('chess', 'jquery.jqplot.css');
 	
 	$this->data["content"] = 'ratings';
 	$this->load->view('layout', $this->data);
   }
+  
+  /*
+  public function graphicRatings()
+  {
+	$this->output->enable_profiler(TRUE);
+	$this->load->model("chess/games_model");
+	
+	$this->load->model("chess/players_ratings_model");
+	
+	$this->load->model("chess/players_model");
+	
+	$games = $this->games_model->retrieveAllGames();
+	
+	$this->data["players_ratings"] = $this->players_ratings_model->reloadAllRatings($games);
+	
+	$this->data["players"] =$this->players_model->retrieveAllPlayers();
+	
+	
+	
+	$this->data["content"] = 'ratings';
+	
+	
+	
+	$this->load->view('layout', $this->data);
+	
+  }
+   */
 }
 
