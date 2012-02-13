@@ -51,6 +51,18 @@ if ( ! function_exists('getPieceColor'))
   }
 }
 
+if(!function_exists('getSimplePieceCode'))
+{
+  function getSimplePieceCode($code)
+  {
+    if($code > BLACK)
+    {
+      return $code - BLACK;
+    }
+    return $code;
+  }
+}
+
 if ( ! function_exists('getPieceName'))
 {
   function getPieceName($piece)
@@ -121,4 +133,55 @@ if ( ! function_exists('getHistoryMove'))
 	return $return;
   }
   
+}
+
+if ( ! function_exists('pieceIsInBoard'))
+{
+  function pieceIsInBoard($row, $col)
+  {
+    if (($row >= 0) && ($row <= 7) && ($col >= 0) && ($col <= 7))
+      return true;
+    else
+      return false;
+  }
+}
+
+if ( ! function_exists('array_copy'))
+{
+  /**
+  * make a recursive copy of an array 
+  *
+  * @param array $aSource
+  * @return array    copy of source array
+  */
+  function array_copy ($aSource) {
+     // check if input is really an array
+     if (!is_array($aSource)) {
+         throw new Exception("Input is not an Array");
+     }
+
+     // initialize return array
+     $aRetAr = array();
+
+     // get array keys
+     $aKeys = array_keys($aSource);
+     // get array values
+     $aVals = array_values($aSource);
+
+     // loop through array and assign keys+values to new return array
+     for ($x=0;$x<count($aKeys);$x++) {
+         // clone if object
+         if (is_object($aVals[$x])) {
+             $aRetAr[$aKeys[$x]]=clone $aVals[$x];
+         // recursively add array
+         } elseif (is_array($aVals[$x])) {
+             $aRetAr[$aKeys[$x]]=array_copy ($aVals[$x]);
+         // assign just a plain scalar value
+         } else {
+             $aRetAr[$aKeys[$x]]=$aVals[$x];
+         }
+     }
+
+     return $aRetAr;
+  }
 }
