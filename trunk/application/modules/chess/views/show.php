@@ -9,6 +9,7 @@ $rank = 8;
 $rankLabel = $rank;
 $files = array('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h');
 //var_dump($isWhite);
+//var_dump($enableAjax);
 ?>
 
 <div class="clear"></div>
@@ -123,6 +124,15 @@ endfor;
   
 </div>
 
+<div class="messages">
+  <?php if($myTourn): ?>
+  
+    <span>Tu turno</span>
+  <?php else: ?>
+    <span>Turno del contricante</span>
+  <?php endif; ?>
+</div>
+
 <div class="history_table">
   <div class="history">
 	<?php
@@ -181,6 +191,8 @@ endfor;
 
 <script type="text/javascript">
 
+  var gameId = <?php echo $game->getGameId(); ?>;
+
   var history_js = <?php echo json_encode($history_js); ?>;
   
   var board_js = <?php echo json_encode($board_js); ?>;
@@ -194,11 +206,19 @@ endfor;
   var BLACK = "<?php echo BLACK?>";
   var WHITE = "<?php echo WHITE?>";
   var player_is_white = true;
+  var enable_ajax = false;
   <?php if(!$isWhite): ?>
 	 player_is_white = false;
   <?php endif; ?>
-  
-  
+  <?php if($enableAjax): ?>
+	 enable_ajax = true;
+  <?php endif; ?>  
+
+  var can_move = false;
+  <?php if($myTourn): ?>
+    can_move = true;
+  <?php endif; ?>    
+    var send_movement_url = '<?php echo site_url('chess/movePiece');?>';
 </script>
 
 
