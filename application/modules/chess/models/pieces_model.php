@@ -75,6 +75,7 @@ class pieces_model extends CI_Model{
     $this->db->where('col', $row);
     $this->db->where('row', $col);
     $this->db->delete('pieces');
+    var_dump($this->db->last_query());
   }
   /**
    *
@@ -99,6 +100,21 @@ class pieces_model extends CI_Model{
    */
   public function savePieceMovement($pieceMovement, $post_data)
   {
+    if(isset($pieceMovement->pawnEnPassant))
+    {
+      var_dump('estoy comiendo al paso.');
+      $this->savePawnEnPassant($pieceMovement, $post_data);
+      return true;
+    }
+    if(isset($pieceMovement->isKingRook))
+    {
+      var_dump('estoy haciendo un enroque');
+      $this->saveCastling($pieceMovement, $post_data);
+      return true;
+    }
+    
+    
+    
     //var_dump($pieceMovement);
     $toPlace = $this->searchPiece($post_data['finishCol'], $post_data['finishRow'], $post_data['gameId']);
     var_dump('to place');
@@ -106,6 +122,34 @@ class pieces_model extends CI_Model{
     $fromPlace = $this->searchPiece($post_data['startingCol'], $post_data['startingRow'], $post_data['gameId']);
     var_dump('from place');
     var_dump($fromPlace);
+    
+    $piece_to_put_on_board = $fromPlace['piece'];
+    $promotedTo = NULL;
+    
+    if(isset($post_data['promoting_piece']) && !is_null($post_data['promoting_piece'])) 
+    {
+      if($post_data['promoting_piece'])
+      {
+        switch ($post_data['promoting_piece']) {
+          case QUEEN:
+              $piece_to_put_on_board = "queen";
+            break;
+          case ROOK:
+              $piece_to_put_on_board = "rook";
+            break;
+          case KNIGHT:
+              $piece_to_put_on_board = "knight";
+            break;
+          case BISHOP:
+              $piece_to_put_on_board = "bishop";
+            break;
+          default:
+            break;
+        }
+        $promotedTo = $piece_to_put_on_board;
+      }
+    }
+
     /**
      * Si esta nulo el lugar de toPlace entonces lo tengo que insertar.
      * En caso contrario tengo que hacer un update.
@@ -115,7 +159,7 @@ class pieces_model extends CI_Model{
       $data = array(
           'gameID' => $fromPlace['gameID'] ,
           'color' => $fromPlace['color'] ,
-          'piece' => $fromPlace['piece'],
+          'piece' => $piece_to_put_on_board,
           'col' => $post_data['finishRow'],
           'row' => $post_data['finishCol']
        );
@@ -131,17 +175,122 @@ class pieces_model extends CI_Model{
       $board =  $this->retrieveGame($fromPlace['gameID']);
       $board =  $this->generateArrayOfBoard($board);
       //Obtengo si esta chequeado.
-      var_dump('soy las blancas?');
-      var_dump($post_data['player_is_white']);
+      //var_dump('soy las blancas?');
+      //var_dump($post_data['player_is_white']);
       $isInCheck = $this->checkForOtherKingSafety($board, !$post_data['player_is_white']);
-      var_dump($isInCheck);
+      //var_dump($isInCheck);
       
-      $this->addMovementToHistory($fromPlace['gameID'], $fromPlace['piece'], $fromPlace['color'], $post_data['startingRow'], $post_data['startingCol'], $post_data['finishRow'], $post_data['finishCol'], null, null, $isInCheck);
+      $this->addMovementToHistory($fromPlace['gameID'], $fromPlace['piece'], $fromPlace['color'], $post_data['startingRow'], $post_data['startingCol'], $post_data['finishRow'], $post_data['finishCol'], null, $promotedTo, $isInCheck);
     }
     else
     {
+      var_dump(' Le tengo que hacer es un update');
+      $data = array(
+          'color' => $fromPlace['color'] ,
+          'piece' => $piece_to_put_on_board,
+          
+       );
+      $where = array(
+          'gameID' => $fromPlace['gameID'] ,
+          'col' => $post_data['finishRow'],
+          'row' => $post_data['finishCol']
+      );
+      //$this->db->where('gameID', $fromPlace['gameID']);
+      $this->db->update("pieces", $data, $where);
+      $this->deletePiece($post_data['startingCol'], $post_data['startingRow'], $post_data['gameId']);
+      
+      $board =  $this->retrieveGame($fromPlace['gameID']);
+      $board =  $this->generateArrayOfBoard($board);
+      $isInCheck = $this->checkForOtherKingSafety($board, !$post_data['player_is_white']);
+      $this->addMovementToHistory($fromPlace['gameID'], $fromPlace['piece'], $fromPlace['color'], $post_data['startingRow'], $post_data['startingCol'], $post_data['finishRow'], $post_data['finishCol'], $toPlace['piece'], $promotedTo, $isInCheck);
       
     }
+  }
+  
+  private function saveCastling($pieceMovement, $post_data)
+  {
+    $kingRow = 0;
+    if(!$post_data['player_is_white']){
+      $kingRow = 7;
+    }
+    
+    var_dump(" Finish col ". $post_data['finishCol']);
+    var_dump(" Finish row ". $post_data['finishRow']);
+    var_dump(" La fila del rey es :". $kingRow);
+    
+    $fromPlace = $this->searchPiece($post_data['startingCol'], $post_data['startingRow'], $post_data['gameId']);
+    $data = array(
+          'gameID' => $fromPlace['gameID'] ,
+          'color' => $fromPlace['color'] ,
+          'piece' => $fromPlace['piece'],
+          'col' => $post_data['finishRow'],
+          'row' => $post_data['finishCol']
+       );
+    //Muevo el rey
+    $this->db->insert("pieces", $data);
+    $this->deletePiece($post_data['startingCol'], $post_data['startingRow'], $post_data['gameId']);
+    //Elimino donde estaba el rey
+    //Muevo la torre
+    
+    //Si el rey se mueve a la casilla 2 el otro se mueve a la casilla 3
+    $rookCol = 3; 
+    $rookStartCol = 0;
+    if($post_data['finishRow'] != 2)
+    {
+      $rookCol = 5; 
+      $rookStartCol = 7;
+    }
+    $data = array(
+          'gameID' => $fromPlace['gameID'] ,
+          'color' => $fromPlace['color'] ,
+          'piece' => "rook",
+          'col' => $rookCol,
+          'row' => $kingRow
+       );
+    $this->db->insert("pieces", $data);
+    //Elimino donde estaba la torre
+    $this->deletePiece($kingRow, $rookStartCol, $post_data['gameId']);
+    
+    $board =  $this->retrieveGame($fromPlace['gameID']);
+    $board =  $this->generateArrayOfBoard($board);
+    $isInCheck = $this->checkForOtherKingSafety($board, !$post_data['player_is_white']);
+    $this->addMovementToHistory($fromPlace['gameID'], $fromPlace['piece'], $fromPlace['color'], $post_data['startingRow'], $post_data['startingCol'], $post_data['finishRow'], $post_data['finishCol'], null, null, $isInCheck);
+  }
+  
+  private function savePawnEnPassant($pieceMovement, $post_data)
+  {
+    $moveBackwards = -1;
+    if(!$post_data['player_is_white'])
+    {
+      $moveBackwards = 1;
+    }
+    
+    $toPlace = $this->searchPiece($post_data['finishCol'], $post_data['finishRow'], $post_data['gameId']);
+    $fromPlace = $this->searchPiece($post_data['startingCol'], $post_data['startingRow'], $post_data['gameId']);
+    $data = array(
+          'gameID' => $fromPlace['gameID'] ,
+          'color' => $fromPlace['color'] ,
+          'piece' => $fromPlace['piece'],
+          'col' => $post_data['finishRow'],
+          'row' => $post_data['finishCol']
+       );
+    
+    $this->db->insert("pieces", $data);
+    $this->deletePiece($post_data['startingCol'], $post_data['startingRow'], $post_data['gameId']);
+    $back_position_col = $post_data['startingCol'] + $moveBackwards;
+    $this->deletePiece($post_data['startingRow'], $back_position_col, $post_data['gameId']);
+    $board =  $this->retrieveGame($fromPlace['gameID']);
+    $board =  $this->generateArrayOfBoard($board);
+    
+    $isInCheck = $this->checkForOtherKingSafety($board, !$post_data['player_is_white']);
+    $this->addMovementToHistory($fromPlace['gameID'], $fromPlace['piece'], $fromPlace['color'], $post_data['startingRow'], $post_data['startingCol'], $post_data['finishRow'], $post_data['finishCol'], $fromPlace['piece'], null, $isInCheck);
+    /*
+    var_dump($post_data['finishCol']);
+    var_dump($post_data['finishCol'] + $moveBackwards);
+    var_dump($board[$post_data['finishCol']]);
+    var_dump($board[$post_data['finishCol'] + $moveBackwards]);
+    var_dump($board[$post_data['finishCol']][$post_data['finishRow']]);
+    */
   }
   
   private function addMovementToHistory($gameId, $currentPiece, $currentColor, $fromRow, $fromColumn, $toRow, $toColumn, $replace = null, $promotedTo = null, $isInCheck = false)
@@ -151,10 +300,10 @@ class pieces_model extends CI_Model{
           'gameID' => $gameId ,
           'curColor' => $currentColor ,
           'curPiece' => $currentPiece,
-          'fromCol' => $fromColumn,
-          'fromRow' => $fromRow,
-          'toCol' => $toColumn,
-          'toRow' => $toRow,
+          'fromCol' => $fromRow,
+          'fromRow' => $fromColumn,
+          'toCol' => $toRow,
+          'toRow' => $toColumn,
           'replaced' => $replace,
           'promotedTo' => $promotedTo,
           'isInCheck' => $isInCheck
@@ -533,7 +682,10 @@ class pieces_model extends CI_Model{
       }
       else
       {
-        $finish = true;
+        if(!$auxMovement->inCheck)
+        {
+          $finish = true;
+        }
       }
       $auxColumn ++;
     }
@@ -557,7 +709,11 @@ class pieces_model extends CI_Model{
       }
       else
       {
-        $finish = true;
+        if(!$auxMovement->inCheck)
+        {
+          $finish = true;
+        }
+        //$finish = true;
       }
       $auxColumn --;
     }
@@ -581,7 +737,11 @@ class pieces_model extends CI_Model{
       }
       else
       {
-        $finish = true;
+        if(!$auxMovement->inCheck)
+        {
+          $finish = true;
+        }
+        //$finish = true;
       }
       $auxRow ++;
     }
@@ -605,7 +765,11 @@ class pieces_model extends CI_Model{
       }
       else
       {
-        $finish = true;
+        if(!$auxMovement->inCheck)
+        {
+          $finish = true;
+        }
+        //$finish = true;
       }
       $auxRow --;
     }
@@ -637,7 +801,11 @@ class pieces_model extends CI_Model{
       }
       else
       {
-        $finish = true;
+        if(!$auxMovement->inCheck)
+        {
+          $finish = true;
+        }
+        //$finish = true;
       }
       $auxColumn ++;
       $auxRow++;
@@ -665,7 +833,11 @@ class pieces_model extends CI_Model{
       }
       else
       {
-        $finish = true;
+        if(!$auxMovement->inCheck)
+        {
+          $finish = true;
+        }
+        //$finish = true;
       }
       $auxColumn ++;
       $auxRow --;
@@ -692,7 +864,11 @@ class pieces_model extends CI_Model{
       }
       else
       {
-        $finish = true;
+        if(!$auxMovement->inCheck)
+        {
+          $finish = true;
+        }
+        //$finish = true;
       }
       $auxColumn --;
       $auxRow ++;
@@ -719,7 +895,11 @@ class pieces_model extends CI_Model{
       }
       else
       {
-        $finish = true;
+        if(!$auxMovement->inCheck)
+        {
+          $finish = true;
+        }
+        //$finish = true;
       }
       $auxColumn --;
       $auxRow --;
@@ -747,6 +927,8 @@ class pieces_model extends CI_Model{
   
   private function retrieveAllPosiblePawnMovement($column, $row, $pawnCode, $isWhite, $board_array, $history_array)
   {
+//    var_dump($column);
+//    var_dump($row);
     $pawn_moves = array();
     //Defino el movimiento basico del peon y la fila de inicio.
     $pawnRow = 1;
@@ -829,11 +1011,24 @@ class pieces_model extends CI_Model{
     }
     if(!is_null($aux_history) && $aux_history["curPiece"] == "pawn")
     {
-      if(abs($aux_history["fromRow"] - $aux_history["toRow"]) == 2)
+      /*
+      var_dump($aux_history);
+      var_dump(abs($aux_history["fromRow"] - $aux_history["toRow"]) == 2);
+      var_dump(abs($aux_history["fromCol"] - $aux_history["toCol"]) == 2);
+      */
+      if(abs($aux_history["fromCol"] - $aux_history["toCol"]) == 2)
       {
+//        var_dump('movio dos posiciones');
+//        var_dump('row + 1');
+//        var_dump($aux_history["toRow"] == $row + 1);
+//        var_dump($aux_history["fromCol"] == $column);
+//        var_dump('row - 1');
+//        var_dump($aux_history["toRow"] == $row - 1);
+//        var_dump('la columna es :'.$column);
+//        var_dump('la columna historica es :'.$aux_history["toCol"]);
         //Movio dos posiciones. 
         //Tengo que chequear que este al lado del peon que estoy moviendo.
-        if($aux_history["toCol"] == row + 1)
+        if($aux_history["toRow"] == $row + 1 && $aux_history["toCol"] == $column)
         {
           //Esta al lado!!!
           //Entonces puedo comer ;)
@@ -842,13 +1037,14 @@ class pieces_model extends CI_Model{
           $auxMovement = $this->isPiecePosibleMovement($column, $row, $auxColumn, $auxRow, $pawnCode, $isWhite, $board_array);
           if(!$auxMovement->noMove)
           {
+            $auxMovement->pawnEnPassant = true;
             array_push($pawn_moves, $auxMovement);
           }
         }
         
         //Tengo que chequear que este al lado del peon que estoy moviendo.
         //Chequeo para el otro lado
-        if($aux_history["toCol"] == row - 1)
+        if($aux_history["toRow"] == $row - 1 && $aux_history["toCol"] == $column)
         {
           //Esta al lado!!!
           //Entonces puedo comer ;)
@@ -857,6 +1053,7 @@ class pieces_model extends CI_Model{
           $auxMovement = $this->isPiecePosibleMovement($column, $row, $auxColumn, $auxRow, $pawnCode, $isWhite, $board_array);
           if(!$auxMovement->noMove)
           {
+            $auxMovement->pawnEnPassant = true;
             array_push($pawn_moves, $auxMovement);
           }
         }
@@ -865,7 +1062,17 @@ class pieces_model extends CI_Model{
     return $pawn_moves;
   }
   
-  
+  /**
+   *
+   * @param int $startColumn
+   * @param int $startRow
+   * @param int $finishColumn
+   * @param int $finishRow
+   * @param int $pieceCode
+   * @param boolean $isWhite
+   * @param multidimension array $board_array
+   * @return stdClass 
+   */
   private function isPiecePosibleMovement($startColumn, $startRow, $finishColumn, $finishRow, $pieceCode, $isWhite, $board_array)
   {
     $salida = new stdClass();
@@ -874,6 +1081,7 @@ class pieces_model extends CI_Model{
     {
       //Esta por afuera del tablero por lo tanto no es posible.
       $salida->noMove = true;
+      $salida->inCheck = false;
       return $salida;
     }
     
@@ -886,6 +1094,7 @@ class pieces_model extends CI_Model{
     {
       //Estoy cayendo en una pieza mia por lo tanto no es valido.
       $salida->noMove = true;
+      $salida->inCheck = false;
       return $salida;
     }
     else
@@ -913,11 +1122,13 @@ class pieces_model extends CI_Model{
         $salida->finishCol = $finishColumn;
         $salida->finishRow = $finishRow;
         $salida->pieceCode = $pieceCode;
+        $salida->inCheck = false;
         return $salida;
       }
       else
       {
         $salida->noMove = true;
+        $salida->inCheck = true;
         return $salida;
       }
     }
@@ -928,42 +1139,42 @@ class pieces_model extends CI_Model{
   {
     $kingPosition = $this->retrieveKingPosition($board_aux_array, $enemy_is_white);
     
-    var_dump($kingPosition);
+    //var_dump($kingPosition);
     $isCheck = $this->isKingInCheckByKnight($board_aux_array, $kingPosition->col, $kingPosition->row, !$enemy_is_white);
-    var_dump('isKingInCheckByKnight');
-    var_dump($isCheck);
+    //var_dump('isKingInCheckByKnight');
+    //var_dump($isCheck);
     if($isCheck)
     {
       return $isCheck;
     }
     
     $isCheck = $this->isKingInCheckByBishopOrQueen($board_aux_array, $kingPosition->col, $kingPosition->row, !$enemy_is_white);
-    var_dump('isKingInCheckByBishopOrQueen');
-    var_dump($isCheck);
+    //var_dump('isKingInCheckByBishopOrQueen');
+    //var_dump($isCheck);
     if($isCheck)
     {
       return $isCheck;
     }
     
     $isCheck = $this->isKingInCheckByRookOrQueen($board_aux_array, $kingPosition->col, $kingPosition->row, !$enemy_is_white);
-    var_dump('isKingInCheckByRookOrQueen');
-    var_dump($isCheck);
+    //var_dump('isKingInCheckByRookOrQueen');
+    //var_dump($isCheck);
     if($isCheck)
     {
       return $isCheck;
     }
     
     $isCheck = $this->isKingInCheckByPawn($board_aux_array, $kingPosition->col, $kingPosition->row, !$enemy_is_white);
-    var_dump('isKingInCheckByPawn');
-    var_dump($isCheck);
+    //var_dump('isKingInCheckByPawn');
+    //var_dump($isCheck);
     if($isCheck)
     {
       return $isCheck;
     }
     
     $isCheck = $this->isKingInCheckByKing($board_aux_array, $kingPosition->col, $kingPosition->row, !$enemy_is_white);
-    var_dump('isKingInCheckByKing');
-    var_dump($isCheck);
+    //var_dump('isKingInCheckByKing');
+    //var_dump($isCheck);
     if($isCheck)
     {
       return $isCheck;
@@ -972,10 +1183,11 @@ class pieces_model extends CI_Model{
     return $isCheck;
   }
   
-  private function checkForKingSafety($board_aux_array, $enemy_is_white)
+  public function checkForKingSafety($board_aux_array, $enemy_is_white)
   {
     $kingPosition = $this->retrieveKingPosition($board_aux_array, !$enemy_is_white);
     
+    //var_dump($kingPosition);
     $isCheck = $this->isKingInCheckByKnight($board_aux_array, $kingPosition->col, $kingPosition->row, $enemy_is_white);
     if($isCheck)
     {
@@ -1223,12 +1435,14 @@ class pieces_model extends CI_Model{
       $rook = ROOK + BLACK;
       $queen = QUEEN + BLACK;
     }
+/*
     var_dump("auxIsKingInCheckByRookOrQueen");
     var_dump($rook);
     var_dump($queen);
+  */  
     if(pieceIsInBoard($row, $col))
     {
-      var_dump($board_aux_array[$col][$row]);
+      //var_dump($board_aux_array[$col][$row]);
       if ($board_aux_array[$col][$row] == $rook || $board_aux_array[$col][$row] == $queen)
       {
         //Enemy Rook or Queen found
@@ -1268,11 +1482,11 @@ class pieces_model extends CI_Model{
    */
   private function isKingInCheckByBishopOrQueen($board_aux_array, $col, $row, $enemy_is_white)
   {
-    /*
-    var_dump($col);
-    var_dump($row);
-    var_dump($enemy_is_white);
-    */
+//    echo 'isKingInCheckByBishopOrQueen <br/>';
+//    var_dump($col);
+//    var_dump($row);
+//    var_dump($enemy_is_white);
+//    echo '<br/>';
     $finish_bishop_check = false;
     $aux_col_king = $col;
     $aux_row_king = $row;
@@ -1281,7 +1495,13 @@ class pieces_model extends CI_Model{
     {
       $aux_col_king = $aux_col_king + 1;
       $aux_row_king = $aux_row_king + 1;
-      $result = $this->auxIsKingInCheckByBishopOrQueen($board_aux_array, $col, $row, $enemy_is_white);
+//      echo '<hr/>';
+//      echo 'columna '.$aux_col_king.'<br/>';
+//      echo 'row '.$aux_row_king.'<br/>';
+      
+      $result = $this->auxIsKingInCheckByBishopOrQueen($board_aux_array, $aux_col_king, $aux_row_king, $enemy_is_white);
+//      echo '<br/>devolvio '.$result.'<br/>';
+      //var_dump($result);
       switch ($result) {
         case 2:
           return true;
@@ -1300,7 +1520,10 @@ class pieces_model extends CI_Model{
     {
       $aux_col_king = $aux_col_king - 1;
       $aux_row_king = $aux_row_king + 1;
-      $result = $this->auxIsKingInCheckByBishopOrQueen($board_aux_array, $col, $row, $enemy_is_white);
+//      echo '<hr/>';
+//      echo 'columna '.$aux_col_king.'<br/>';
+//      echo 'row '.$aux_row_king.'<br/>';
+      $result = $this->auxIsKingInCheckByBishopOrQueen($board_aux_array, $aux_col_king, $aux_row_king, $enemy_is_white);
       switch ($result) {
         case 2:
           return true;
@@ -1319,7 +1542,10 @@ class pieces_model extends CI_Model{
     {
       $aux_col_king = $aux_col_king + 1;
       $aux_row_king = $aux_row_king - 1;
-      $result = $this->auxIsKingInCheckByBishopOrQueen($board_aux_array, $col, $row, $enemy_is_white);
+//      echo '<hr/>';
+//      echo 'columna '.$aux_col_king.'<br/>';
+//      echo 'row '.$aux_row_king.'<br/>';
+      $result = $this->auxIsKingInCheckByBishopOrQueen($board_aux_array, $aux_col_king, $aux_row_king, $enemy_is_white);
       switch ($result) {
         case 2:
           return true;
@@ -1338,7 +1564,10 @@ class pieces_model extends CI_Model{
     {
       $aux_col_king = $aux_col_king - 1;
       $aux_row_king = $aux_row_king - 1;
-      $result = $this->auxIsKingInCheckByBishopOrQueen($board_aux_array, $col, $row, $enemy_is_white);
+//      echo '<hr/>';
+//      echo 'columna '.$aux_col_king.'<br/>';
+//      echo 'row '.$aux_row_king.'<br/>';
+      $result = $this->auxIsKingInCheckByBishopOrQueen($board_aux_array, $aux_col_king, $aux_row_king, $enemy_is_white);
       switch ($result) {
         case 2:
           return true;
@@ -1372,14 +1601,23 @@ class pieces_model extends CI_Model{
       $queen = QUEEN + BLACK;
     }
     /*
+    echo '<hr/>';
+    
     var_dump("auxIsKingInCheckByBishopOrQueen - bishop");
     var_dump($bishop);
     var_dump("auxIsKingInCheckByBishopOrQueen - queen");
     var_dump($queen);
+    
+    echo '<hr/>';
+    var_dump($col);
+    var_dump($row);
+    echo '<hr/>';
     */
     if(pieceIsInBoard($row, $col))
     {
-      var_dump($board_aux_array[$col][$row]);
+//      var_dump($board_aux_array[$col]);
+//      var_dump($board_aux_array[$col][$row]);
+//      echo '<hr/>';
       //console.log(" la diagonal es : " + board_auxiliary[col][row]);
       if ($board_aux_array[$col][$row] == $bishop || $board_aux_array[$col][$row] == $queen)
       {
@@ -1390,12 +1628,15 @@ class pieces_model extends CI_Model{
       {
         if($board_aux_array[$col][$row] != 0)
         {
+          
+//          var_dump('estoy aca??');
           return 1;
         }
       }
     }
     else
     {
+//      var_dump('estoy aca 1??');
       return 1;
     }
     return 0;
@@ -1421,6 +1662,11 @@ class pieces_model extends CI_Model{
     {
       $knight = KNIGHT + BLACK;
     }
+    /*
+    var_dump('el caballo enemigo es:');
+    var_dump($knight);
+    echo '<br/>';
+    */
     //Recorro los 8 posibles movimientos del caballo.
     for($i = 0; $i < 8; $i++)
     {
@@ -1428,6 +1674,13 @@ class pieces_model extends CI_Model{
       $fromCol = $col + $this->knightMove[$i][1];
       if(pieceIsInBoard($fromRow, $fromCol))
       {
+        /*
+        echo '<br/>';
+        echo 'la pieza es:';
+        echo '<br/>';
+        var_dump($board_aux_array[$fromCol][$fromRow]);
+        echo '<br/>';
+        */
         if($board_aux_array[$fromCol][$fromRow] == $knight)
         {
           return true;

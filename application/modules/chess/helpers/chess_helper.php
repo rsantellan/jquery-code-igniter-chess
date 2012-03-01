@@ -109,7 +109,18 @@ if ( ! function_exists('getHistoryMove'))
 	
 	if (($piece == "king") && (abs($history["toCol"] - $history["fromCol"]) == 2))
 	{
-	  $return .= "0 - 0 - 0";
+//      var_dump($history["curColor"]);
+//      var_dump(($history["curColor"] == "white" && $history["toCol"] > 4));
+//      var_dump(($history["curColor"] == "black" && $history["toCol"] < 4));
+      if(($history["curColor"] == "white" && $history["toCol"] > 4) || ($history["curColor"] == "black" && $history["toCol"] > 4) )
+      {
+        $return .= "0 - 0";
+      }
+      else
+      {
+        $return .= "0 - 0 - 0";
+      }
+	  
 	}
 	else
 	{
