@@ -223,3 +223,19 @@ endfor;
 
 
 <div class="clear"></div>
+
+
+<div id="promoting_dialog_box" style="display:none">
+  <form id="promotion_form" action="<?php echo site_url('chess/movePiece');?>" method="POST">
+    <input type="radio" name="piece" value="<?php echo QUEEN;?>" /> Reina
+    <input type="radio" name="piece" value="<?php echo ROOK;?>" /> Torre
+    <input type="radio" name="piece" value="<?php echo BISHOP;?>" /> Alfil
+    <input type="radio" name="piece" value="<?php echo KNIGHT;?>" /> Caballo
+    <input type="hidden" name="player_is_white" value="" id="inp_player_is_white" />
+    <input type="hidden" name="startingRow" value="" id="inp_startingRow" />
+    <input type="hidden" name="startingCol" value="" id="inp_startingCol" />
+    <input type="hidden" name="finishRow" value="" id="inp_finishRow" />
+    <input type="hidden" name="finishCol" value="" id="inp_finishCol" />
+    <input type="hidden" name="gameId" value="" id="inp_gameId" />
+  </form>
+</div>

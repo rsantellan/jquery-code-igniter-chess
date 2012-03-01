@@ -98,10 +98,32 @@ class chess extends MY_Controller {
       $this->data['enableAjax'] = true;
       
 //      //Obtengo la partida.
+      
       $board =  $this->pieces_model->retrieveGame($id);
       $board =  $this->pieces_model->generateArrayOfBoard($board);
+      
+      var_dump("Soy las blancas??");
+      var_dump($this->data['isWhite']);
+      echo '<hr/>';
+      
+      var_dump("su rey esta en jaque??");
+      echo '<br/>';
       $isInCheck = $this->pieces_model->checkForOtherKingSafety($board, !$this->data['isWhite']);
       var_dump($isInCheck);
+      echo '<hr/>';
+      
+//      var_dump($board);
+//      echo '<hr/>';
+//      var_dump($board[0]);
+//      echo '<hr/>';
+//      var_dump($board[1]);
+//      echo '<hr/>';
+      var_dump("mi rey esta en jaque??");
+      echo '<br/>';
+      $isInCheck = $this->pieces_model->checkForKingSafety($board, !$this->data['isWhite']);
+      var_dump($isInCheck);
+      echo '<hr/>';
+      
 //      //Obtengo los posibles movimientos de la partida.
 //
 //      $history = $this->history_model->retrieveGameHistory($id);
@@ -159,6 +181,8 @@ class chess extends MY_Controller {
     $data['finishCol'] = $this->input->get_post("finishCol", TRUE);
     $data['gameId'] = $this->input->get_post("gameId", TRUE);
     $data['player_is_white'] = $this->input->get_post("player_is_white", TRUE);
+    $data['promoting_piece'] = $this->input->get_post("piece", NULL);
+    
     if($data['player_is_white'] == "false")
     {
       $data['player_is_white'] = false;
@@ -202,6 +226,16 @@ class chess extends MY_Controller {
         }
       }
     }
+    
+    /**
+     * 
+     * Aca voy a interceptar el movimiento por las dudas de que este bien.
+     * 
+     **/
+    /*
+    var_dump($aux_movement);
+    die;
+    */
     //En caso de que lo este lo guardo.
     if(!is_null($aux_movement))
     {

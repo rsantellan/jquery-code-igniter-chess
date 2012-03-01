@@ -42,7 +42,7 @@ function initMyMoves()
 {
   myPosibleMovements = getMovementQuantity();
   console.log(myPosibleMovements.length);
-  //separateMovementsByType();
+  separateMovementsByType();
 }
 
 function separateMovementsByType()
@@ -61,6 +61,7 @@ function separateMovementsByType()
     switch(retrievePieceType(aux.pieceCode))
     {
       case parseInt(PAWN):
+//        console.log(aux);
         pawnList.push(1);
       break;
       case parseInt(KNIGHT):
@@ -128,6 +129,43 @@ function acceptElement(element, dropArea)
   return false;
 }
 
+
+function showDialogOfPromotion()
+{
+  $( "#promoting_dialog_box" ).dialog({
+    closeOnEscape: false,
+    open: function(event, ui) {
+       $(".ui-dialog-titlebar-close", ui.dialog).hide(); 
+    },
+    modal: true,
+    buttons: {
+				"Promover": function() {
+          $.ajax({
+            url: $("#promotion_form").attr('action'),
+            data: $("#promotion_form").serialize(),
+            type: 'post',
+            dataType: 'json',
+            success: function(json){
+              console.log('success');
+              console.log('en caso de que me devuelva bien tengo que poner el peon con la nueva forma');
+            }
+          });
+					$( this ).dialog( "close" );
+				}
+    }
+  });
+}
+
+function clearPromotionForm()
+{
+  $("#inp_player_is_white").val("");
+  $("#inp_startingRow").val("");
+  $("#inp_startingCol").val("");
+  $("#inp_finishRow").val("");
+  $("#inp_finishCol").val("");
+  $("#inp_gameId").val("");
+}
+
 function sendDataAndConfirmMovement(movement)
 {
   console.log(movement);
@@ -136,6 +174,31 @@ function sendDataAndConfirmMovement(movement)
     return false;
   }
   //return false;
+  
+  //Si esta por coronar tengo que darle las opciones de lo mismo.
+  // Tengo que fijarme que es un peon.
+  // Si es negro y esta por ir a la casilla 0 esta coronando.
+  // Si es blanco y esta por ir a la casilla 7 esta coronando
+  
+  if(retrievePieceType(movement.pieceCode) == PAWN)
+  {
+    console.log('soy un peon');
+    if((movement.pieceCode > BLACK && movement.finishCol == 0) || (movement.pieceCode < BLACK && movement.finishCol == 7))
+    {
+      $("#inp_player_is_white").val(player_is_white);
+      $("#inp_startingRow").val(movement.startingRow);
+      $("#inp_startingCol").val(movement.startingCol);
+      $("#inp_finishRow").val(movement.finishRow);
+      $("#inp_finishCol").val(movement.finishCol);
+      $("#inp_gameId").val(gameId);
+      showDialogOfPromotion();
+      console.log('soy un peon que esta coronando');
+      return false;
+    }
+  }
+  
+  
+  
   
   $.ajax({
     url: send_movement_url,
@@ -321,23 +384,9 @@ function retrieveAllPosiblePawnMovement(column, row, pawnCode)
   
   var moveForward = 1;
   if(!player_is_white) moveForward = -1;
-  /*
-  console.log('La columna es');
-  console.log(board_js[column]);
-  console.log('el peon es');
-  console.log(board_js[column][row]);  
-  */
   //Chequeo el avance simple
   var auxColumn = column + moveForward;
   var auxRow = row;
-  /*
-  console.log('el peon estaba en ; col: ' +column + ' row: ' + row );
-  console.log('el peon pasa a estar en ; col: ' +auxColumn + ' row: ' + auxRow );
-  console.log('antes : ' +  board_js[column][row]);
-  console.log('despues : ' +  board_js[auxColumn][auxRow]);
-  console.log(auxRow);
-  console.log(auxColumn);
-  */
   if(isInBoard(auxColumn, auxRow) && board_js[auxColumn][auxRow] == 0)
   {
     //console.log('el lugar esta vacio por lo tanto se puede mover');
@@ -406,27 +455,43 @@ function retrieveAllPosiblePawnMovement(column, row, pawnCode)
   //console.log(last_movement);
   if(last_movement != undefined && last_movement.curPiece == "pawn")
   {
+
+    console.log(last_movement);
+    console.log(last_movement.fromRow - last_movement.toRow);
+    console.log(last_movement.fromCol - last_movement.toCol);
+    console.log(Math.abs(last_movement.fromCol - last_movement.toCol) == 2);
+    console.log(Math.abs(last_movement.fromCol - last_movement.toCol) == 2);
+    
+    //if(Math.abs(last_movement.fromCol - last_movement.toCol) == 2)
     if(Math.abs(last_movement.fromRow - last_movement.toRow) == 2)
     {
-      //console.log('el ultimo movimiento fue de a dos');
       //Tengo que chequear que este al lado del peon que estoy moviendo.
-      if(last_movement.toCol == row + 1)
+      
+      console.log(column);
+      console.log(row);
+      console.log('historico');
+      console.log(last_movement.toCol);
+      console.log(last_movement.toRow);
+      
+      if(last_movement.toRow == row + 1 && column == last_movement.toCol)
       {
         //Esta al lado!!!
         //Entonces puedo comer ;)
         var aux_movement = isPiecePosibleMovement(column, row, column + moveForward, row + 1, pawnCode);
         if(aux_movement[1] != null)
         {
+          //console.log('estoy aca 1');
           pawnMove.push(aux_movement[1]);
         }
       }
-      if(last_movement.toCol == row - 1)
+      if(last_movement.toRow == row - 1 && column == last_movement.toCol)
       {
         //Esta al lado!!!
         //Entonces puedo comer ;)
         var aux_movement = isPiecePosibleMovement(column, row, column + moveForward, row - 1, pawnCode);
         if(aux_movement[1] != null)
         {
+          //console.log('estoy aca 2');
           pawnMove.push(aux_movement[1]);
         }
       }
@@ -506,7 +571,7 @@ function isBishopPosibleMovement(column, row, bishopCode)
     {
       bishopMovement.push(aux_movement[1]);
     }
-    if(aux_movement[0] == false)
+    if(aux_movement[0] == false && aux_movement[2] == false)
     {
       finish = true;
     }
@@ -529,7 +594,7 @@ function isBishopPosibleMovement(column, row, bishopCode)
     {
       bishopMovement.push(aux_movement1[1]);
     }
-    if(aux_movement1[0] == false)
+    if(aux_movement1[0] == false && aux_movement[2] == false)
     {
       finish = true;
     }
@@ -554,7 +619,7 @@ function isBishopPosibleMovement(column, row, bishopCode)
     {
       bishopMovement.push(aux_movement[1]);
     }
-    if(aux_movement[0] == false)
+    if(aux_movement[0] == false && aux_movement[2] == false)
     {
       finish = true;
     }
@@ -583,7 +648,7 @@ function isBishopPosibleMovement(column, row, bishopCode)
     {
       bishopMovement.push(aux_movement[1]);
     }
-    if(aux_movement[0] == false)
+    if(aux_movement[0] == false && aux_movement[2] == false)
     {
       finish = true;
     }
@@ -598,6 +663,14 @@ function isBishopPosibleMovement(column, row, bishopCode)
   
 }
 
+/**
+ * 
+ * Devuelve un array.
+ *  0 - Si esta comiendo
+ *  1 - El movimiento que podria hacer
+ *  2 - Si ese movimiento no es valido por que esta en jaque.
+ * 
+ **/ 
 function isPiecePosibleMovement(startColumn, startRow, finishColumn, finishRow, pieceCode)
 {
   var salida = new Array();
@@ -606,6 +679,7 @@ function isPiecePosibleMovement(startColumn, startRow, finishColumn, finishRow, 
   {
     salida[0] = false;
     salida[1] = null;
+    salida[2] = false;
     return salida;
   }
   
@@ -616,6 +690,7 @@ function isPiecePosibleMovement(startColumn, startRow, finishColumn, finishRow, 
     //Estoy comiendo a uno de los mios por lo no me puedo mover mas para ese lado.
     salida[0] = false;
     salida[1] = null;
+    salida[2] = false;
   }
   else
   {
@@ -656,11 +731,13 @@ function isPiecePosibleMovement(startColumn, startRow, finishColumn, finishRow, 
       aux_movement.finishRow = finishRow;
       aux_movement.pieceCode = pieceCode;
       salida[1] = aux_movement;
+      salida[2] = false;
     }
     else
     {
       salida[0] = false;
       salida[1] = null;
+      salida[2] = true;
     }
   }
   return salida;
@@ -681,14 +758,13 @@ function retrieveAllPosibleRookMovements(column, row, rookCode)
   while(!finish && auxColumn < 8)
   {
     quantityPassed++;
-    
     var aux_movement = isPiecePosibleMovement(column, row, auxColumn, auxRow, rookCode);
     
     if(aux_movement[1] != null)
     {
       rookMovement.push(aux_movement[1]);
     }
-    if(aux_movement[0] == false)
+    if(aux_movement[0] == false && aux_movement[2] == false)
     {
       finish = true;
     }
@@ -704,13 +780,12 @@ function retrieveAllPosibleRookMovements(column, row, rookCode)
   {
     quantityPassed++;
     auxRow = row;
-    
     var aux_movement = isPiecePosibleMovement(column, row, auxColumn, auxRow, rookCode);
     if(aux_movement[1] != null)
     {
       rookMovement.push(aux_movement[1]);
     }
-    if(aux_movement[0] == false)
+    if(aux_movement[0] == false && aux_movement[2] == false)
     {
       finish = true;
     }
@@ -728,13 +803,12 @@ function retrieveAllPosibleRookMovements(column, row, rookCode)
   {
     quantityPassed++;
     auxColumn = column;
-    
     var aux_movement = isPiecePosibleMovement(column, row, auxColumn, auxRow, rookCode);
     if(aux_movement[1] != null)
     {
       rookMovement.push(aux_movement[1]);
     }
-    if(aux_movement[0] == false)
+    if(aux_movement[0] == false && aux_movement[2] == false)
     {
       finish = true;
     }
@@ -754,13 +828,12 @@ function retrieveAllPosibleRookMovements(column, row, rookCode)
     
     quantityPassed++;
     auxColumn = column;
-    
     var aux_movement = isPiecePosibleMovement(column, row, auxColumn, auxRow, rookCode);
     if(aux_movement[1] != null)
     {
       rookMovement.push(aux_movement[1]);
     }
-    if(aux_movement[0] == false)
+    if(aux_movement[0] == false && aux_movement[2] == false)
     {
       finish = true;
     }
